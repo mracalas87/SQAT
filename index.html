@@ -167,6 +167,8 @@ textarea{resize:vertical;line-height:1.45}
 .field>span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
 .pick select{min-height:48px;font-size:16px}
+.notesblk{margin-top:10px}
+.notesblk h3{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ovr{margin-top:10px;display:grid;gap:6px}
 .ovr h3{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:baseline}
 .ovr textarea{line-height:1.45}
@@ -284,7 +286,7 @@ var RATE = [
   {k:'B', label:'Above',   meaning:'Above expected'}
 ];
 var MEAN = {}; RATE.forEach(function(r){ MEAN[r.k] = r.meaning; });
-var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, exScope:'all', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, accent:'ink'};
+var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, exScope:'all', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, tShowN:true, accent:'ink'};
 
 var $ = function(s, r){ return (r || document).querySelector(s); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -442,7 +444,7 @@ function fixUI(){
     u.tScope = keep.length ? keep.join('+') : 'all';
   }
   u.tOvrN = [2, 3, 4, 5, 6].indexOf(Number(u.tOvrN)) >= 0 ? Number(u.tOvrN) : 4;
-  u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false;
+  u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false; u.tShowN = u.tShowN !== false;
   u.tStrN = [1, 2, 3].indexOf(Number(u.tStrN)) >= 0 ? Number(u.tStrN) : 3;
   u.tTarN = [1, 2, 3].indexOf(Number(u.tTarN)) >= 0 ? Number(u.tTarN) : 3;
   if (!THEMES.some(function(t){ return t.id === u.accent; })) u.accent = 'ink';
@@ -903,7 +905,7 @@ function buildXlsx(){
   var stAll = []; CL.forEach(function(c){ stAll = stAll.concat(stRows(c, 'all')); });
   var sc = stCols();
   var sts = XLSX.utils.aoa_to_sheet([sc].concat(stAll.map(function(r){ return sc.map(function(k){ return r[k]; }); })));
-  sts['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(sc.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : 48}; }));
+  sts['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(sc.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : k === 'Teacher notes' ? 60 : 48}; }));
   XLSX.utils.book_append_sheet(wb, sts, 'Reporting');
   var key = XLSX.utils.aoa_to_sheet([['Rating','Meaning']].concat(RATE.map(function(r){ return [r.k, r.meaning]; }).concat([['\u2605','Has made progress: the rating is higher than when first recorded. See the History sheet for every dated rating.'],['Red corner mark','On a rating that has changed (up or down): hover in Excel to see the earlier ratings and dates.'],['Notes','Observation note for that pupil and objective, beside the rating.']])));
   key['!cols'] = [{wch:8},{wch:28}];
@@ -960,6 +962,7 @@ function stCols(){
   if (S.ui.tShowO) c.push('Report overview');
   if (S.ui.tShowS) for (i = 0; i < S.ui.tStrN; i++) c.push('Strength ' + (i + 1));
   if (S.ui.tShowT) for (i = 0; i < S.ui.tTarN; i++) c.push('Target ' + (i + 1));
+  if (S.ui.tShowN) c.push('Teacher notes');
   return c;
 }
 var RANK = {B:0, G:1, R:0, Y:1};
@@ -999,6 +1002,17 @@ function strengthsTargets(p, scope){
   return {marked: items.length, total: los.length, strengths: strengths, targets: targets};
 }
 function stKey(scope, p, lo){ return scope + '|' + p.id + '|' + lo.id; }
+/* teacher notes typed or dictated against an objective, in the order of the curriculum */
+function noteItems(p, scope){
+  var out = [];
+  scopeLos(scope, yearOfPupil(p.id)).forEach(function(f){
+    var m = getMark(p.id, f.lo.id), n = m && m.n ? String(m.n).trim() : '';
+    if (n) out.push({f:f, r:m.r || '', n:n, k:stKey(scope, p, f.lo) + '|n'});
+  });
+  return out;
+}
+function noteLine(x){ return code(x.f.u, x.f.i) + (x.r ? ' (' + RLABEL[x.r] + ')' : '') + ': ' + x.n; }
+function noteLines(p, scope){ return noteItems(p, scope).filter(function(x){ return !S.excl[x.k]; }).map(noteLine); }
 function phrase(kind, name, text){
   var first = name.split(' ')[0], m = text.match(/^i can\s+(.*)$/i), body = (m ? m[1] : text).replace(/[.\s]+$/, '');
   if (kind === 'sf') return m ? first + '’s strongest area so far is being able to ' + body + '.' : first + '’s strongest area so far: ' + body + '.';
@@ -1053,6 +1067,7 @@ function stRows(c, scope){
     var i;
     if (S.ui.tShowS) for (i = 0; i < S.ui.tStrN; i++) o['Strength ' + (i + 1)] = t.s[i] || '';
     if (S.ui.tShowT) for (i = 0; i < S.ui.tTarN; i++) o['Target ' + (i + 1)] = t.t[i] || '';
+    if (S.ui.tShowN) o['Teacher notes'] = noteLines(p, scope).join('\n');
     return o;
   });
 }
@@ -1061,7 +1076,7 @@ function stText(c, scope){
   return c.name + ' | ' + scopeLabel(scope) + '\n\n' + c.pupils.map(function(p){
     var t = pickTexts(p, scope);
     var ov = overviewText(p, scope);
-    return p.name + (S.ui.tShowO && ov ? '\nOverview:\n' + ov : '') + (S.ui.tShowS ? '\nStrengths:\n' + list(t.s) : '') + (S.ui.tShowT ? '\nTargets:\n' + list(t.t) : '');
+    return p.name + (S.ui.tShowO && ov ? '\nOverview:\n' + ov : '') + (S.ui.tShowS ? '\nStrengths:\n' + list(t.s) : '') + (S.ui.tShowT ? '\nTargets:\n' + list(t.t) : '') + (S.ui.tShowN ? '\nTeacher notes:\n' + list(noteLines(p, scope)) : '');
   }).join('\n\n');
 }
 function viewTargets(){
@@ -1086,19 +1101,21 @@ function viewTargets(){
         '<textarea class="ovr-ta" rows="5" data-p="' + esc(p.id) + '" aria-label="Report overview for ' + esc(p.name) + '" placeholder="Nothing marked Meeting or Above yet.">' + esc(ov) + '</textarea>' +
         (Object.prototype.hasOwnProperty.call(S.ovr, ovrKey(scope, p)) ? '<button type="button" class="btn ghost small" data-act="ovrReset" data-p="' + esc(p.id) + '">Reset to suggested</button>' : '') + '</div>' : '') +
       (S.ui.tShowS || S.ui.tShowT ? '<div class="tcols">' + (S.ui.tShowS ? '<div><h3>Strengths</h3>' + col(p, r.strengths, 's', 'Nothing marked Meeting or Above yet.') + '</div>' : '') +
-      (S.ui.tShowT ? '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked Below or Towards yet.') + '</div>' : '') + '</div>' : '') + '</li>';
+      (S.ui.tShowT ? '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked Below or Towards yet.') + '</div>' : '') + '</div>' : '') +
+      (S.ui.tShowN ? '<div class="notesblk"><h3>Teacher notes</h3>' + (function(){ var ni = noteItems(p, scope); return ni.length ? ni.map(function(x){
+        return '<label class="titem"><input type="checkbox" data-k="' + esc(x.k) + '"' + (S.excl[x.k] ? '' : ' checked') + '><span>' + (x.r ? '<span class="tag" data-r="' + x.r + '">' + RLABEL[x.r] + '</span> ' : '') + '<span class="muted mono" style="font-size:12px">' + esc(code(x.f.u, x.f.i)) + '</span> <span class="ttext">' + esc(x.n) + '</span></span></label>'; }).join('') : '<p class="muted">No notes added for these units.</p>'; })() + '</div>' : '') + '</li>';
   }).join('');
   return banner() +
   '<section class="pick">' +
     '<label class="field"><span>Form</span><select id="tClass">' + selOpts(S.classes, S.ui.tClass, function(x){ return x.id; }, function(x){ return x.name; }) + '</select></label>' +
     '<div class="field wide" role="group" aria-label="Units to include"><span>Units to include</span><div class="scopelist">' + scopeBoxes + '</div></div>' +
     '<div class="field wide" role="group" aria-label="Sections to include"><span>Sections to include</span><div class="scopelist">' +
-      [['O', 'Report overview'], ['S', 'Strengths'], ['T', 'Targets']].map(function(x){ return '<label class="titem"><input type="checkbox" data-show="tShow' + x[0] + '"' + (S.ui['tShow' + x[0]] ? ' checked' : '') + '><span>' + x[1] + '</span></label>'; }).join('') + '</div></div>' +
+      [['O', 'Report overview'], ['S', 'Strengths'], ['T', 'Targets'], ['N', 'Teacher notes']].map(function(x){ return '<label class="titem"><input type="checkbox" data-show="tShow' + x[0] + '"' + (S.ui['tShow' + x[0]] ? ' checked' : '') + '><span>' + x[1] + '</span></label>'; }).join('') + '</div></div>' +
     (S.ui.tShowO ? '<label class="field"><span>Top attainments in overview</span><select id="tOvrN">' + [2, 3, 4, 5, 6].map(function(n){ return '<option value="' + n + '"' + (S.ui.tOvrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
     (S.ui.tShowS ? '<label class="field"><span>Strengths per pupil</span><select id="tStrN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tStrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
     (S.ui.tShowT ? '<label class="field"><span>Targets per pupil</span><select id="tTarN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tTarN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
   '</section>' +
-  '<p class="count" style="margin-top:12px">Tick the sections you want. The report overview celebrates each pupil’s top attainments across the units chosen (Above first, then Meeting), at about 400 characters, and you can edit it. Strengths come from objectives marked Above or Meeting, and targets from those marked Below or Towards. If a pupil has nothing at Meeting or Above, their highest ratings are used as strengths, and if nothing is below Meeting, their lowest are used as targets. Choose how many of each you need, most recent first. Untick any you do not want to use.</p>' +
+  '<p class="count" style="margin-top:12px">Tick the sections you want, including any teacher notes you typed or dictated while marking. The report overview celebrates each pupil’s top attainments across the units chosen (Above first, then Meeting), at about 400 characters, and you can edit it. Strengths come from objectives marked Above or Meeting, and targets from those marked Below or Towards. If a pupil has nothing at Meeting or Above, their highest ratings are used as strengths, and if nothing is below Meeting, their lowest are used as targets. Choose how many of each you need, most recent first. Untick any you do not want to use.</p>' +
   '<div class="bulk"><button class="btn" type="button" data-act="tXlsx">Download Excel (.xlsx)</button><button class="btn ghost" type="button" data-act="tCopy">Copy all as text</button><button class="btn ghost" type="button" data-act="tCsv">Download CSV</button></div>' +
   '<textarea id="tFallback" class="ta-mono" rows="10" hidden aria-label="Reporting text to copy" style="margin-top:12px"></textarea>' +
   '<ul class="tlist">' + cards + '</ul>';
@@ -1597,7 +1614,7 @@ var actions = {
     if (typeof XLSX === 'undefined') { say('The Excel library did not load. Use Download CSV instead.'); return; }
     var cols = stCols(), rows = stRows(cls, S.ui.tScope);
     var ws = XLSX.utils.aoa_to_sheet([cols].concat(rows.map(function(r){ return cols.map(function(k){ return r[k]; }); })));
-    ws['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(cols.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : 48}; }));
+    ws['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(cols.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : k === 'Teacher notes' ? 60 : 48}; }));
     var wb = stamp(XLSX.utils.book_new()); XLSX.utils.book_append_sheet(wb, ws, 'Reporting');
     await saveFile('markbook-reporting-' + (slug(cls.name) || 'form') + '-' + today() + '.xlsx', XLSX.write(wb, {bookType:'xlsx', type:'array'}));
   },
