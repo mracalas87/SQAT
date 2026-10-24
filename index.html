@@ -286,7 +286,7 @@ var RATE = [
   {k:'B', label:'Above',   meaning:'Above expected'}
 ];
 var MEAN = {}; RATE.forEach(function(r){ MEAN[r.k] = r.meaning; });
-var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, exScope:'all', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, tShowN:true, accent:'ink'};
+var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, exScope:'all', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, tShowN:true, tOvrNotes:true, accent:'ink'};
 
 var $ = function(s, r){ return (r || document).querySelector(s); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -444,7 +444,7 @@ function fixUI(){
     u.tScope = keep.length ? keep.join('+') : 'all';
   }
   u.tOvrN = [2, 3, 4, 5, 6].indexOf(Number(u.tOvrN)) >= 0 ? Number(u.tOvrN) : 4;
-  u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false; u.tShowN = u.tShowN !== false;
+  u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false; u.tShowN = u.tShowN !== false; u.tOvrNotes = u.tOvrNotes !== false;
   u.tStrN = [1, 2, 3].indexOf(Number(u.tStrN)) >= 0 ? Number(u.tStrN) : 3;
   u.tTarN = [1, 2, 3].indexOf(Number(u.tTarN)) >= 0 ? Number(u.tTarN) : 3;
   if (!THEMES.some(function(t){ return t.id === u.accent; })) u.accent = 'ink';
@@ -1048,6 +1048,10 @@ function overviewFor(p, scope){
     var t = '';
     if (up.length) t = lead + ', ' + first + ' has exceeded expectations and is able to ' + ovList(up) + '.';
     if (ok.length) t += (t ? ' ' + first + ' can also ' : lead + ', ' + first + ' has met expectations and can ') + ovList(ok) + '.';
+    if (S.ui.tOvrNotes) {
+      var nt = sel.filter(function(x){ return x.m.n && String(x.m.n).trim(); }).map(function(x){ var n = String(x.m.n).trim().replace(/\s+/g, ' '); n = n.charAt(0).toUpperCase() + n.slice(1); return /[.!?]$/.test(n) ? n : n + '.'; });
+      if (nt.length) t += ' NOTE: ' + nt.join(' ');
+    }
     return t;
   };
   var sel = [], text = '';
@@ -1111,6 +1115,7 @@ function viewTargets(){
     '<div class="field wide" role="group" aria-label="Units to include"><span>Units to include</span><div class="scopelist">' + scopeBoxes + '</div></div>' +
     '<div class="field wide" role="group" aria-label="Sections to include"><span>Sections to include</span><div class="scopelist">' +
       [['O', 'Report overview'], ['S', 'Strengths'], ['T', 'Targets'], ['N', 'Teacher notes']].map(function(x){ return '<label class="titem"><input type="checkbox" data-show="tShow' + x[0] + '"' + (S.ui['tShow' + x[0]] ? ' checked' : '') + '><span>' + x[1] + '</span></label>'; }).join('') + '</div></div>' +
+    (S.ui.tShowO ? '<div class="field wide" role="group" aria-label="Overview options"><span>Overview options</span><div class="scopelist"><label class="titem"><input type="checkbox" data-show="tOvrNotes"' + (S.ui.tOvrNotes ? ' checked' : '') + '><span>Add teacher notes to the overview as NOTE:</span></label></div></div>' : '') +
     (S.ui.tShowO ? '<label class="field"><span>Top attainments in overview</span><select id="tOvrN">' + [2, 3, 4, 5, 6].map(function(n){ return '<option value="' + n + '"' + (S.ui.tOvrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
     (S.ui.tShowS ? '<label class="field"><span>Strengths per pupil</span><select id="tStrN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tStrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
     (S.ui.tShowT ? '<label class="field"><span>Targets per pupil</span><select id="tTarN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tTarN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
