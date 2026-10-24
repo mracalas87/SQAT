@@ -420,6 +420,12 @@ select,textarea,input[type=text],input[type=number]{padding:7px 10px;min-height:
 @keyframes mbspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.syncbtn.spin svg{animation:none}}
 .syncbtn:disabled{opacity:.7}
+.steps{padding-left:22px;line-height:1.6;display:grid;gap:10px;margin:10px 0}
+.steps li{padding-left:2px}
+ul.steps{list-style:disc}
+.howto summary{font-size:15px}
+.howto h3{margin-top:12px}
+.howto textarea{margin-top:6px}
 </style>
 
 <div class="wrap">
@@ -1382,22 +1388,97 @@ async function syncChoose(which){
     else { await asCall('put', putText()); syncDone('Google Drive now matches this device.'); }
   } catch (e) { syncFail(e); }
 }
+var AS_LINES = [
+  '/* Markbook sync by Andy Calas. Stores one file in your own Google Drive. */',
+  "var SECRET = '__SECRET__';",
+  '',
+  'function setup() { getFile_(); }',
+  '',
+  'function doPost(e) {',
+  '  var b;',
+  "  try { b = JSON.parse(e.postData.contents); } catch (x) { return out_({ok: false, error: 'bad request'}); }",
+  "  if (!b || b.key !== SECRET) return out_({ok: false, error: 'key'});",
+  '  var lock = LockService.getScriptLock();',
+  '  lock.waitLock(15000);',
+  '  try {',
+  '    var f = getFile_();',
+  "    if (b.action === 'get') {",
+  '      var t = f.getBlob().getDataAsString();',
+  "      if (!t || t === '{}') return out_({ok: true, empty: true});",
+  '      return out_({ok: true, modified: f.getLastUpdated().toISOString(), data: t});',
+  '    }',
+  "    if (b.action === 'put' && typeof b.data === 'string') {",
+  '      f.setContent(b.data);',
+  '      return out_({ok: true, modified: f.getLastUpdated().toISOString()});',
+  '    }',
+  "    return out_({ok: false, error: 'action'});",
+  '  } finally { lock.releaseLock(); }',
+  '}',
+  '',
+  "function doGet() { return out_({ok: true, app: 'Markbook sync'}); }",
+  '',
+  'function getFile_() {',
+  '  var props = PropertiesService.getScriptProperties(), id = props.getProperty(\'fid\'), f = null;',
+  '  if (id) { try { f = DriveApp.getFileById(id); if (f.isTrashed()) f = null; } catch (e) { f = null; } }',
+  "  if (!f) { f = DriveApp.createFile('markbook-data.json', '{}', 'application/json'); props.setProperty('fid', f.getId()); }",
+  '  return f;',
+  '}',
+  '',
+  'function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }'
+];
+function asScript(){ return AS_LINES.join('\n').replace('__SECRET__', lsGet(GSEC) || 'MAKE-A-SECRET-IN-MARKBOOK-FIRST'); }
+function makeSecret(){
+  var abc = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = '', a = new Uint32Array(28);
+  try { crypto.getRandomValues(a); } catch (e) { for (var i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 4294967295); }
+  for (var j = 0; j < a.length; j++) out += abc.charAt(a[j] % abc.length);
+  return out;
+}
+function confirmSecret(){ return window.confirm('You already have a secret. Making a new one means you must copy the script and redeploy it. Continue?'); }
+async function copyScript(){
+  if (!lsGet(GSEC)) { lsSet(GSEC, makeSecret()); render(); }
+  var txt = asScript();
+  try { await navigator.clipboard.writeText(txt); say('Script copied. Now paste it into Apps Script (step 4).'); }
+  catch (e) { var box = $('#scriptFallback'); if (box) { box.hidden = false; box.value = txt; box.focus(); box.select(); } say('Select all the text shown and copy it.'); }
+}
+async function syncTest(){
+  if (!syncReady()) { say('Fill in the web app address and secret key first.'); return; }
+  syncState.busy = true; syncState.msg = 'Testing…'; render();
+  try { await asCall('get'); syncState.busy = false; syncState.msg = 'Connected. Your script answered correctly. Now press Sync now.'; render(); say('Connected.'); }
+  catch (e) { syncFail(e); }
+}
 function syncCard(){
-  var when = lsGet(GTIME), ask = syncState.ask;
+  var when = lsGet(GTIME), ask = syncState.ask, ready = syncReady();
   var h = '<section class="card"><h2>Google Drive sync</h2>' +
-    '<p class="muted">Keeps one private copy of your Markbook in your own Google Drive so your devices match. It uses a small script in your school Google account, so no Google Cloud access is needed. Sync is manual: press the button on one device, then on the other.</p>' +
-    '<label class="field"><span>Web app address</span><input type="text" id="asUrl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(asUrl()) + '"></label>' +
-    '<label class="field"><span>Secret key</span><input type="password" id="asSecret" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="the phrase you set in the script" value="' + esc(lsGet(GSEC)) + '"></label>' +
-    '<div class="row"><button class="btn" type="button" data-act="syncNow"' + (syncState.busy ? ' disabled' : '') + '>' + (syncState.busy ? 'Syncing…' : 'Sync now') + '</button></div>' +
-    '<p class="count" role="status">' + esc(syncState.msg || (when ? 'Last synced ' + new Date(when).toLocaleString('en-GB') + ' on this device.' : 'Not synced yet on this device.')) + '</p>';
+    '<p class="muted">Keeps one private copy of your Markbook in your own Google Drive so your phone and laptop match. It uses a small script in your own Google account, so no Google Cloud access is needed. Sync is manual: press the sync button on one device, then on the other.</p>' +
+    '<label class="field"><span>Secret key</span><input type="text" id="asSecret" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="press Make my secret in step 1" value="' + esc(lsGet(GSEC)) + '"></label>' +
+    '<div class="row"><button class="btn" type="button" data-act="syncNow"' + (syncState.busy ? ' disabled' : '') + '>' + (syncState.busy ? 'Working…' : 'Sync now') + '</button>' +
+    '<button class="btn ghost" type="button" data-act="syncTest"' + (syncState.busy ? ' disabled' : '') + '>Test connection</button></div>' +
+    '<p class="count" role="status">' + esc(syncState.msg || (when ? 'Last synced ' + new Date(when).toLocaleString('en-GB') + ' on this device.' : ready ? 'Ready. Press Test connection, then Sync now.' : 'Not set up yet. Follow the steps below.')) + '</p>';
   if (ask) h += '<div class="warn" role="alert"><strong>Both copies have changed.</strong><p>Google Drive was last updated ' + esc(ask.when ? new Date(ask.when).toLocaleString('en-GB') : 'earlier') + '. Choose which copy to keep. The other is replaced, so save a backup first if unsure.</p><div class="row"><button class="btn" type="button" data-act="syncUse" data-v="drive">Use the Drive copy</button><button class="btn ghost" type="button" data-act="syncUse" data-v="local">Keep this device</button></div></div>';
-  h += '<details><summary>One-time setup (about 5 minutes)</summary><ol class="muted">' +
-    '<li>In your school Google Drive, create a new Google Sheet. Open Extensions, then Apps Script.</li>' +
-    '<li>Paste in the Markbook sync script (the file Markbook-sync-Code.gs) and change the SECRET line to your own long phrase.</li>' +
-    '<li>Press Save, then Run the function setup once and approve the permissions.</li>' +
-    '<li>Deploy, New deployment, type Web app. Execute as: Me. Who has access: Anyone. Copy the Web app URL.</li>' +
-    '<li>Paste the URL and your secret above, on each device, then press Sync now.</li></ol>' +
-    '<p class="muted">The data is stored as one file in your own Drive. Anyone who has both the address and your secret could read it, so keep the secret private and use a long phrase.</p></details></section>';
+  var open = ('howto' in openFolds) ? openFolds.howto : !ready;
+  h += '<details class="howto" data-fold="howto"' + (open ? ' open' : '') + '><summary>Step by step setup (first device, about 5 minutes)</summary>' +
+    '<p class="muted">You only do this once. You need a Google account (your school one is fine) and a computer. No coding knowledge is needed: you copy and paste.</p>' +
+    '<ol class="steps">' +
+    '<li><b>Make your secret key.</b> Press <button class="btn ghost small" type="button" data-act="makeSecret">Make my secret</button>. A long random phrase appears in the Secret key box above. It works like a password between Markbook and your script.</li>' +
+    '<li><b>Copy the script.</b> Press <button class="btn ghost small" type="button" data-act="copyScript">Copy the script</button>. Your secret is already inside it. If nothing happens, a box appears: select all the text in it and copy it.' +
+      '<textarea id="scriptFallback" class="ta-mono" rows="8" hidden readonly aria-label="Script to copy"></textarea></li>' +
+    '<li><b>Create a Google Sheet to hold the script.</b> Go to <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a>, signed in with the account you want your data kept in. Click <b>Blank spreadsheet</b>. Click the title at the top left and call it <b>Markbook sync</b>. In the menu bar click <b>Extensions</b>, then <b>Apps Script</b>. A new tab opens with a code editor.</li>' +
+    '<li><b>Paste the script.</b> In the editor you will see a few lines starting with <i>function myFunction</i>. Click inside the code, select everything (Ctrl and A on Windows, Cmd and A on a Mac), press delete, then paste (Ctrl and V, or Cmd and V). Click the <b>Save</b> icon (a floppy disk) at the top.</li>' +
+    '<li><b>Give it permission.</b> At the top, next to the <b>Run</b> button, there is a dropdown of function names. Choose <b>setup</b>, then click <b>Run</b>. Click <b>Review permissions</b> and choose your account. Google may say <i>This app isn’t verified</i>. That is normal for your own script: click <b>Advanced</b>, then <b>Go to Markbook sync (unsafe)</b>, then <b>Allow</b>. The script can only use Drive files it creates itself, and it is yours.</li>' +
+    '<li><b>Publish it as a web app.</b> Click the blue <b>Deploy</b> button at the top right, then <b>New deployment</b>. Click the small gear next to <i>Select type</i> and choose <b>Web app</b>. Set <b>Execute as</b> to <b>Me</b> and <b>Who has access</b> to <b>Anyone</b>. Click <b>Deploy</b>, then <b>Copy</b> next to the <b>Web app URL</b>. It ends in <i>/exec</i>. (If you cannot choose Anyone, your school has blocked it, see the help below.)</li>' +
+    '<li><b>Paste the address into Markbook.</b> Come back to this page and paste the web app URL into the box below. The secret is already filled in above.' +
+      '<label class="field"><span>Web app address</span><input type="text" id="asUrl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(asUrl()) + '"></label></li>' +
+    '<li><b>Test it.</b> Press <b>Test connection</b>. You should see <i>Connected</i>. Then press <b>Sync now</b>. The first sync saves your data to your Drive.</li>' +
+    '<li><b>Set up your other device.</b> Open Markbook on your phone or other computer, go to Settings, Google Drive sync, and paste in the <b>same</b> web app address and the <b>same</b> secret key. You can copy both from the boxes on this page. Press Sync now: your data arrives. After that, tap the sync button (two arrows) next to the home button whenever you start or finish marking.</li>' +
+    '</ol>' +
+    '<h3>Using it day to day</h3><p class="muted">Press sync when you open Markbook and again when you finish. If you marked on both devices without syncing in between, Markbook asks which copy to keep, so nothing is lost without you choosing.</p>' +
+    '<h3>If something goes wrong</h3><ul class="steps">' +
+    '<li><b>The secret key does not match.</b> The secret in Markbook must be exactly the same as the one inside your script. If you changed it, copy the script again (step 2) and paste it over the old one, then do step 6 again using <b>Deploy, Manage deployments, the pencil icon, Version: New version, Deploy</b>.</li>' +
+    '<li><b>The address did not answer like the Markbook script.</b> Check you pasted the Web app URL (step 7) ending in <i>/exec</i>, not the editor address, and that <b>Who has access</b> is set to <b>Anyone</b>.</li>' +
+    '<li><b>I cannot pick Anyone.</b> Your school has switched this off. Ask your IT team to allow Apps Script web apps with Anyone access for your account, or use the Save backup file option on the Export page instead.</li>' +
+    '<li><b>Could not reach your sync script.</b> Check your internet connection and try again.</li>' +
+    '<li><b>Keep it private.</b> Anyone who has both your web app address and your secret key could read your Markbook data, so do not share them or post them anywhere.</li></ul>' +
+    '</details></section>';
   return h;
 }
 
@@ -2217,6 +2298,9 @@ var actions = {
   },
   driveSoon: function(){ say('Saving straight to OneDrive is not built yet. Download the file and upload it to your school drive.'); },
   syncNow: function(){ syncNow(); },
+  syncTest: function(){ syncTest(); },
+  makeSecret: function(){ if (lsGet(GSEC) && !confirmSecret()) return; lsSet(GSEC, makeSecret()); render(); say('Secret made. Now copy the script (step 2).'); },
+  copyScript: function(){ copyScript(); },
   syncUse: function(t){ syncChoose(t.dataset.v); },
   tplDownload: downloadTemplate,
   planXlsx: downloadPlan,
