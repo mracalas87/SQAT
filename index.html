@@ -415,13 +415,18 @@ select,textarea,input[type=text],input[type=number]{padding:7px 10px;min-height:
 @media (max-width:560px){.fbfold>summary .muted{display:none}}
 .notesblk:not(:has(.titem)){display:none}
 .settings-note{display:none}
+.hdr-mid{display:flex;align-items:center;gap:8px;justify-self:center}
+.syncbtn.spin svg{animation:mbspin .9s linear infinite}
+@keyframes mbspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.syncbtn.spin svg{animation:none}}
+.syncbtn:disabled{opacity:.7}
 </style>
 
 <div class="wrap">
   <header class="bar">
     <div class="bar-row">
       <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect width="24" height="24" rx="6" style="fill:var(--accent)"/><path d="M6.5 12.5l3.6 3.6 7.4-8" style="fill:none;stroke:var(--on-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"/></svg></span><span class="wordmark">Markbook</span></div>
-      <button id="homeBtn" class="btn ghost homebtn" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button><span class="hdr-credit">&copy; 2026 Andy Calas.</span>
+      <div class="hdr-mid"><button id="homeBtn" class="btn ghost homebtn" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button><button id="syncBtn" class="btn ghost homebtn syncbtn" type="button" aria-label="Sync with Google Drive" title="Sync with Google Drive"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.6L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.6L20 15"/><path d="M20 20v-5h-5"/></svg></button></div><span class="hdr-credit">&copy; 2026 Andy Calas.</span>
     </div>
   </header>
   <nav class="nav" id="nav" aria-label="Main"></nav>
@@ -444,7 +449,7 @@ var RATE = [
   {k:'B', label:'Above',   meaning:'Above expected'}
 ];
 var MEAN = {}; RATE.forEach(function(r){ MEAN[r.k] = r.meaning; });
-var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, addLo:false, ratingPal:'classic', ratingColors:{R:'#c23030',Y:'#f2c230',G:'#23844b',B:'#2a63d1'}, numFrom:7, numTo:11, gradeMap:{R:2,Y:4,G:6,B:8}, tShowA:true, exScope:'all', planYear:'', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, tShowN:true, tOvrNotes:true, accent:'ink'};
+var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, addLo:false, ratingPal:'classic', labels:{R:'Below', B:'Above'}, ratingColors:{R:'#c23030',Y:'#f2c230',G:'#23844b',B:'#2a63d1'}, numFrom:7, numTo:11, gradeMap:{R:2,Y:4,G:6,B:8}, tShowA:true, exScope:'all', planYear:'', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, tShowN:true, tOvrNotes:true, accent:'ink'};
 
 var $ = function(s, r){ return (r || document).querySelector(s); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -605,6 +610,9 @@ function fixUI(){
   u.tOvrN = [2, 3, 4, 5, 6].indexOf(Number(u.tOvrN)) >= 0 ? Number(u.tOvrN) : 4;
   u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false; u.tShowN = u.tShowN !== false; u.tShowA = u.tShowA !== false;
   u.numFrom = Math.min(13, Math.max(1, parseInt(u.numFrom, 10) || 7)); u.numTo = Math.min(13, Math.max(u.numFrom, parseInt(u.numTo, 10) || 11));
+  var lb = Object.assign({R:'Below', B:'Above'}, u.labels || {});
+  ['R', 'B'].forEach(function(k){ lb[k] = String(lb[k] == null ? '' : lb[k]).replace(/\s+/g, ' ').trim().slice(0, 22) || (k === 'R' ? 'Below' : 'Above'); });
+  u.labels = lb;
   var rc = Object.assign({R:'#c23030', Y:'#f2c230', G:'#23844b', B:'#2a63d1'}, u.ratingColors || {});
   ['R', 'Y', 'G', 'B'].forEach(function(k){ if (!/^#[0-9a-f]{6}$/i.test(String(rc[k]))) rc[k] = {R:'#c23030', Y:'#f2c230', G:'#23844b', B:'#2a63d1'}[k]; });
   u.ratingColors = rc; if (!u.ratingPal) u.ratingPal = 'classic';
@@ -884,11 +892,11 @@ function viewGrid(){
     '<label class="field wide"><span>Unit</span><select id="gUnit">' + unitOpts + '</select></label>' +
   '</section>' +
   legendHTML() +
-  '<div class="scroll"><table><thead><tr><th class="sticky" scope="col">Pupil</th>' + cols.map(function(cl){ return '<th scope="col" title="' + esc(cl.lo.text) + '">' + esc(cl.code) + '</th>'; }).join('') + '<th scope="col" title="Meeting or above, out of marked">M+</th></tr></thead>' +
+  '<div class="scroll"><table><thead><tr><th class="sticky" scope="col">Pupil</th>' + cols.map(function(cl){ return '<th scope="col" title="' + esc(cl.lo.text) + '">' + esc(cl.code) + '</th>'; }).join('') + '<th scope="col" title="' + esc(MOA()) + ', out of marked">M+</th></tr></thead>' +
   '<tbody>' + rows + '</tbody>' +
-  '<tfoot><tr><th class="sticky" scope="row">Meeting or above</th>' + foot + '<td></td></tr></tfoot></table></div>' +
+  '<tfoot><tr><th class="sticky" scope="row">' + esc(MOA()) + '</th>' + foot + '<td></td></tr></tfoot></table></div>' +
   '<ul class="keylist">' + cols.map(function(cl){ return '<li><b>' + esc(cl.code) + '</b>' + esc(cl.lo.text) + '</li>'; }).join('') + '</ul>' +
-  '<p class="count" style="margin-top:12px">Tap any cell to open that objective and pupil in Mark. M+ shows objectives marked Meeting or Above, out of those marked. A star means the pupil has made progress on this objective since it was first recorded.</p>';
+  '<p class="count" style="margin-top:12px">Tap any cell to open that objective and pupil in Mark. M+ shows objectives marked ' + esc(MOA()) + ', out of those marked. A star means the pupil has made progress on this objective since it was first recorded.</p>';
 }
 
 function viewSetup(){
@@ -1021,7 +1029,7 @@ function planStats(y){
 }
 function planAoa(y){
   var us = planUnits(y), st = planStats(y), rows = [['Unit'], ['Unit summary'], ['Objective'], ['Learning objective'], ['Success criteria']], merges = [], col = 1;
-  if (st.any) rows.push(['Pupils rated'], ['Meeting or above'], ['Rank (1 = most successful)']);
+  if (st.any) rows.push(['Pupils rated'], [MOA()], ['Rank (1 = most successful)']);
   rows.push(['Lesson feedback']); var fr = rows.length - 1;
   us.forEach(function(u){
     var n = u.los.length;
@@ -1070,9 +1078,9 @@ function viewPlan(){
   var total = p.units.reduce(function(a, u){ return a + u.los.length; }, 0);
   return banner() +
   '<section class="pick"><label class="field"><span>Year group</span><select id="planYear">' + ys.map(function(x){ return '<option value="' + esc(x) + '"' + (x === y ? ' selected' : '') + '>' + (x ? 'Year ' + esc(x) : 'All units') + '</option>'; }).join('') + '</select></label></section>' +
-  '<p class="count" style="margin-top:12px">' + (y ? 'Year ' + esc(y) : 'All units') + ': ' + p.units.length + ' unit' + (p.units.length === 1 ? '' : 's') + ' and ' + total + ' objective' + (total === 1 ? '' : 's') + '. Every unit you add in Set up joins this plan automatically, in the order it was added. The last three rows rank each objective by how many pupils across the year group are Meeting or above, so you can see how well it went for next time. Type lesson feedback in the last row, or on the Mark page, and it appears in both and in the downloaded plan.</p>' +
+  '<p class="count" style="margin-top:12px">' + (y ? 'Year ' + esc(y) : 'All units') + ': ' + p.units.length + ' unit' + (p.units.length === 1 ? '' : 's') + ' and ' + total + ' objective' + (total === 1 ? '' : 's') + '. Every unit you add in Set up joins this plan automatically, in the order it was added. The last three rows rank each objective by how many pupils across the year group are ' + esc(MOA().replace('Meeting or ', 'Meeting or ')) + ', so you can see how well it went for next time. Type lesson feedback in the last row, or on the Mark page, and it appears in both and in the downloaded plan.</p>' +
   '<div class="bulk"><button class="btn" type="button" data-act="planXlsx">Download long-term plan (.xlsx)</button></div>' +
-  '<div class="scroll plan-scroll"><table class="plan"><tbody>' + head('Unit', c1) + head('Unit summary', c2) + head('Objective', c3) + head('Learning objective', c4) + head('Success criteria', c5) + (p.st.any ? head('Pupils rated', c6) + head('Meeting or above', c7) + head('Rank (1 = most successful)', c8) : '') + head('Lesson feedback', c9) + '</tbody></table></div>';
+  '<div class="scroll plan-scroll"><table class="plan"><tbody>' + head('Unit', c1) + head('Unit summary', c2) + head('Objective', c3) + head('Learning objective', c4) + head('Success criteria', c5) + (p.st.any ? head('Pupils rated', c6) + head(MOA(), c7) + head('Rank (1 = most successful)', c8) : '') + head('Lesson feedback', c9) + '</tbody></table></div>';
 }
 async function buildPlanStyled(years){
   var EJ = await getExcelJS(); if (!EJ) return null;
@@ -1098,7 +1106,7 @@ async function buildPlanStyled(years){
       col += n;
     });
     if (p.st.any) {
-      ['Pupils rated', 'Meeting or above', 'Rank (1 = most successful)'].forEach(function(l, i){ var c = ws.getCell(6 + i, 1); c.value = l; c.font = {bold:true, color:{argb:'FF16211F'}}; c.fill = fill('FFE6EAE8'); c.alignment = {vertical:'middle', wrapText:true}; });
+      ['Pupils rated', MOA(), 'Rank (1 = most successful)'].forEach(function(l, i){ var c = ws.getCell(6 + i, 1); c.value = l; c.font = {bold:true, color:{argb:'FF16211F'}}; c.fill = fill('FFE6EAE8'); c.alignment = {vertical:'middle', wrapText:true}; });
       var cc = 2;
       p.units.forEach(function(u){ u.los.forEach(function(lo){
         var x = p.st.by[lo.id], col = x.n ? (x.verdict === 'Secure' ? 'FFD6EBDC' : x.verdict === 'Mixed' ? 'FFFBEFC4' : 'FFF5D2D0') : 'FFFFFFFF';
@@ -1276,7 +1284,7 @@ function viewExport(){
     '<label class="field"><span>What to export</span><select id="exScope"><option value="all"' + (S.ui.exScope === 'all' || !S.ui.exScope ? ' selected' : '') + '>Whole school (every form)</option>' +
       exYears().map(function(y){ return '<option value="y:' + esc(y) + '"' + (S.ui.exScope === 'y:' + y ? ' selected' : '') + '>Year ' + esc(y) + ' (all its forms)</option>'; }).join('') +
       S.classes.map(function(c){ return '<option value="c:' + esc(c.id) + '"' + (S.ui.exScope === 'c:' + c.id ? ' selected' : '') + '>' + esc(c.name) + ' only</option>'; }).join('') + '</select></label>' +
-    '<p class="muted">Exporting: <b>' + esc(scx.label) + '</b>. Besides the pupil tabs, the Excel file has a Form summary (every objective and unit for each form) and, for more than one form, a Year summary. Both show how many pupils are Below, Towards, Meeting and Above, the percentage Meeting or above, and the typical grade.</p>' +
+    '<p class="muted">Exporting: <b>' + esc(scx.label) + '</b>. Besides the pupil tabs, the Excel file has a Form summary (every objective and unit for each form) and, for more than one form, a Year summary. Both show how many pupils are ' + esc(RLABEL.R) + ', Towards, Meeting and ' + esc(RLABEL.B) + ', the percentage ' + esc(MOA()) + ', and the typical grade.</p>' +
     '<div class="row">' +
       '<button class="btn" type="button" data-act="xlsx">Excel workbook (.xlsx)</button>' +
       '<button class="btn ghost" type="button" data-act="csv">CSV (.csv)</button>' +
@@ -1306,58 +1314,37 @@ var THEMES = [{id:'ink', name:'Ink', sw:'#16211f'}, {id:'navy', name:'Navy', sw:
 var PAGE_TITLES = {mark:'Mark and Grid', targets:'Reporting', plan:'Planning', settings:'Settings', setup:'Set up and adjust', 'export':'Export'};
 
 
-/* ---------- Google Drive sync (one private file in the app's hidden Drive folder) ---------- */
-var GKEY = 'markbook_gclient', GBASE = 'markbook_syncbase', GTIME = 'markbook_synctime';
-var syncState = {busy:false, msg:'', ask:null}, gTok = null, gTokAt = 0;
+/* ---------- Drive sync through a small Apps Script in the teacher's own Google account ---------- */
+var GKEY = 'markbook_asurl', GSEC = 'markbook_assecret', GBASE = 'markbook_syncbase', GTIME = 'markbook_synctime';
+var syncState = {busy:false, msg:'', ask:null};
 function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
 function lsSet(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
-function gClient(){ return lsGet(GKEY); }
+function asUrl(){ return lsGet(GKEY); }
+function syncReady(){ return !!(asUrl() && lsGet(GSEC)); }
 function syncPayload(){
   var ui = S.ui || {};
   var core = Object.assign({}, S); delete core.ui; delete core.dirty;
-  core.ui = {accent:ui.accent, ratingPal:ui.ratingPal, ratingColors:ui.ratingColors, numFrom:ui.numFrom, numTo:ui.numTo, gradeMap:ui.gradeMap};
+  core.ui = {accent:ui.accent, ratingPal:ui.ratingPal, ratingColors:ui.ratingColors, numFrom:ui.numFrom, numTo:ui.numTo, gradeMap:ui.gradeMap, labels:ui.labels};
   return core;
 }
 function hashOf(o){ var t = JSON.stringify(o), h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h) + ':' + t.length; }
 function localHash(){ return hashOf(syncPayload()); }
-function remoteHash(r){ var o = Object.assign({}, r); delete o.ui; delete o.dirty; var u = r.ui || {}; o.ui = {accent:u.accent, ratingPal:u.ratingPal, ratingColors:u.ratingColors, numFrom:u.numFrom, numTo:u.numTo, gradeMap:u.gradeMap}; delete o.madeBy; delete o.syncedAt; return hashOf(o); }
-function gToken(){
-  if (gTok && Date.now() - gTokAt < 50 * 60 * 1000) return Promise.resolve(gTok);
-  return new Promise(function(res, rej){
-    var run = function(){
-      try {
-        var tc = google.accounts.oauth2.initTokenClient({client_id:gClient(), scope:'https://www.googleapis.com/auth/drive.appdata',
-          callback:function(r){ if (r && r.access_token) { gTok = r.access_token; gTokAt = Date.now(); res(gTok); } else rej(new Error((r && r.error) || 'denied')); },
-          error_callback:function(e){ rej(new Error((e && e.type) || 'popup')); }});
-        tc.requestAccessToken({prompt:''});
-      } catch (e) { rej(e); }
-    };
-    if (window.google && google.accounts && google.accounts.oauth2) run();
-    else loadScript('https://accounts.google.com/gsi/client').then(run, function(){ rej(new Error('offline')); });
-  });
+function remoteHash(r){ var o = Object.assign({}, r); delete o.ui; delete o.dirty; var u = r.ui || {}; o.ui = {accent:u.accent, ratingPal:u.ratingPal, ratingColors:u.ratingColors, numFrom:u.numFrom, numTo:u.numTo, gradeMap:u.gradeMap, labels:u.labels}; delete o.madeBy; delete o.syncedAt; return hashOf(o); }
+async function asCall(action, data){
+  var body = {key:lsGet(GSEC), action:action}; if (data) body.data = data;
+  var r;
+  try { r = await fetch(asUrl(), {method:'POST', body:JSON.stringify(body), redirect:'follow'}); } catch (e) { throw new Error('offline'); }
+  if (!r.ok) throw new Error('http ' + r.status);
+  var j; try { j = await r.json(); } catch (e) { throw new Error('notjson'); }
+  if (!j.ok) throw new Error(j.error || 'refused');
+  return j;
 }
-async function gFetch(tok, url, opt){
-  opt = opt || {}; opt.headers = Object.assign({Authorization:'Bearer ' + tok}, opt.headers || {});
-  var r = await fetch(url, opt); if (!r.ok) throw new Error('drive ' + r.status); return r;
-}
-async function gFind(tok){
-  var r = await gFetch(tok, 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + encodeURIComponent("name='markbook-data.json'") + '&fields=files(id,modifiedTime)');
-  var j = await r.json(); return (j.files || [])[0] || null;
-}
-async function gGet(tok, id){ var r = await gFetch(tok, 'https://www.googleapis.com/drive/v3/files/' + id + '?alt=media'); return r.json(); }
-async function gPut(tok, id){
-  var body = JSON.stringify(Object.assign({madeBy:'Markbook by Andy Calas, copyright 2026', syncedAt:new Date().toISOString()}, S));
-  if (id) { await gFetch(tok, 'https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:body}); return id; }
-  var b = 'mbsync' + Date.now(), meta = JSON.stringify({name:'markbook-data.json', parents:['appDataFolder']});
-  var mp = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
-  var r = await gFetch(tok, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {method:'POST', headers:{'Content-Type':'multipart/related; boundary=' + b}, body:mp});
-  return (await r.json()).id;
-}
-function syncDone(msg){ lsSet(GBASE, localHash()); lsSet(GTIME, new Date().toISOString()); syncState.busy = false; syncState.ask = null; syncState.msg = msg; render(); }
+function putText(){ return JSON.stringify(Object.assign({madeBy:'Markbook by Andy Calas, copyright 2026', syncedAt:new Date().toISOString()}, S)); }
+function syncDone(msg){ lsSet(GBASE, localHash()); lsSet(GTIME, new Date().toISOString()); syncState.busy = false; syncState.ask = null; syncState.msg = msg; render(); say(msg); }
 function applyRemote(R){
-  var keep = {tab:S.ui.tab}; var u = S.ui;
+  var keep = {tab:S.ui.tab}; var u = S.ui, ru = R.ui || {};
   S = Object.assign({}, R); delete S.madeBy; delete S.syncedAt;
-  S.ui = Object.assign({}, DEF_UI, u, {accent:R.ui && R.ui.accent || u.accent, ratingPal:R.ui && R.ui.ratingPal || u.ratingPal, ratingColors:R.ui && R.ui.ratingColors || u.ratingColors, numFrom:R.ui && R.ui.numFrom || u.numFrom, numTo:R.ui && R.ui.numTo || u.numTo, gradeMap:R.ui && R.ui.gradeMap || u.gradeMap}, keep);
+  S.ui = Object.assign({}, DEF_UI, u, {accent:ru.accent || u.accent, ratingPal:ru.ratingPal || u.ratingPal, ratingColors:ru.ratingColors || u.ratingColors, numFrom:ru.numFrom || u.numFrom, numTo:ru.numTo || u.numTo, gradeMap:ru.gradeMap || u.gradeMap, labels:ru.labels || u.labels}, keep);
   if (!S.excl) S.excl = {}; if (!S.ovr) S.ovr = {}; if (!S.lessonNotes) S.lessonNotes = {}; if (typeof S.dirty !== 'number') S.dirty = 0;
   if (typeof fixUI === 'function') fixUI();
   flush(); applyAccent();
@@ -1365,26 +1352,26 @@ function applyRemote(R){
 function syncFail(e){
   var m = String(e && e.message || e);
   syncState.busy = false;
-  syncState.msg = /popup|denied|access_denied/.test(m) ? 'Google sign-in was closed or blocked. Allow pop-ups for this site and try again.'
-    : /offline/.test(m) ? 'Could not reach Google. Check your connection.'
-    : /drive 403|drive 401/.test(m) ? 'Google refused access. Check the Client ID, that the Drive API is on, and that you are signed in with the right account.'
+  syncState.msg = /offline/.test(m) ? 'Could not reach your sync script. Check your connection and the web app address.'
+    : /^key$/.test(m) ? 'The secret key does not match the one in your script.'
+    : /notjson|http 40[134]/.test(m) ? 'The address did not answer like the Markbook script. Check it is the Web app URL, deployed with access set to Anyone.'
     : 'Sync did not finish (' + m + '). Your data on this device is unchanged.';
-  render();
+  render(); say(syncState.msg);
 }
 async function syncNow(){
   if (syncState.busy) return;
-  if (!gClient()) { say('Add your Google Client ID in Settings first.'); go('settings'); return; }
-  syncState.busy = true; syncState.msg = 'Syncing…'; syncState.ask = null; render();
+  if (!syncReady()) { say('Add your sync web address and secret key in Settings first.'); go('settings'); return; }
+  syncState.busy = true; syncState.msg = 'Syncing…'; syncState.ask = null; render(); say('Syncing…');
   try {
-    var tok = await gToken(), f = await gFind(tok);
-    if (!f) { await gPut(tok, null); return syncDone('Saved to Google Drive. Open Markbook on your other device and press Sync.'); }
-    var R = await gGet(tok, f.id), base = lsGet(GBASE), lh = localHash(), rh = remoteHash(R);
+    var res = await asCall('get');
+    if (res.empty) { await asCall('put', putText()); return syncDone('Saved to Google Drive. Open Markbook on your other device and press Sync.'); }
+    var R = JSON.parse(res.data), base = lsGet(GBASE), lh = localHash(), rh = remoteHash(R);
     if (lh === rh) return syncDone('Already up to date.');
     var untouched = !base && S.sample && (S.sample.classes || S.sample.units);
     var lc = untouched ? false : lh !== base, rc = rh !== base;
     if (rc && !lc) { applyRemote(R); return syncDone('Updated from Google Drive.'); }
-    if (lc && !rc) { await gPut(tok, f.id); return syncDone('Saved to Google Drive.'); }
-    syncState.busy = false; syncState.ask = {R:R, id:f.id, tok:tok, when:f.modifiedTime}; syncState.msg = ''; render();
+    if (lc && !rc) { await asCall('put', putText()); return syncDone('Saved to Google Drive.'); }
+    syncState.busy = false; syncState.ask = {R:R, when:res.modified}; syncState.msg = ''; openFolds.googledrivesync = true; S.ui.tab = 'settings'; render(); say('Both copies have changed. Choose which to keep.');
   } catch (e) { syncFail(e); }
 }
 async function syncChoose(which){
@@ -1392,24 +1379,25 @@ async function syncChoose(which){
   syncState.busy = true; syncState.msg = 'Syncing…'; render();
   try {
     if (which === 'drive') { applyRemote(a.R); syncDone('This device now matches Google Drive.'); }
-    else { await gPut(a.tok, a.id); syncDone('Google Drive now matches this device.'); }
+    else { await asCall('put', putText()); syncDone('Google Drive now matches this device.'); }
   } catch (e) { syncFail(e); }
 }
 function syncCard(){
   var when = lsGet(GTIME), ask = syncState.ask;
   var h = '<section class="card"><h2>Google Drive sync</h2>' +
-    '<p class="muted">Keeps one private copy of your Markbook in your own Google Drive so your laptop and phone match. It sits in a hidden app folder that only Markbook can read, not in your normal files. Sync is manual: press the button on one device, then on the other.</p>' +
-    '<label class="field"><span>Google Client ID</span><input type="text" id="gClient" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="123456789-abc.apps.googleusercontent.com" value="' + esc(gClient()) + '"></label>' +
+    '<p class="muted">Keeps one private copy of your Markbook in your own Google Drive so your devices match. It uses a small script in your school Google account, so no Google Cloud access is needed. Sync is manual: press the button on one device, then on the other.</p>' +
+    '<label class="field"><span>Web app address</span><input type="text" id="asUrl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(asUrl()) + '"></label>' +
+    '<label class="field"><span>Secret key</span><input type="password" id="asSecret" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="the phrase you set in the script" value="' + esc(lsGet(GSEC)) + '"></label>' +
     '<div class="row"><button class="btn" type="button" data-act="syncNow"' + (syncState.busy ? ' disabled' : '') + '>' + (syncState.busy ? 'Syncing…' : 'Sync now') + '</button></div>' +
     '<p class="count" role="status">' + esc(syncState.msg || (when ? 'Last synced ' + new Date(when).toLocaleString('en-GB') + ' on this device.' : 'Not synced yet on this device.')) + '</p>';
-  if (ask) h += '<div class="warn" role="alert"><strong>Both copies have changed.</strong><p>Google Drive was last updated ' + esc(new Date(ask.when).toLocaleString('en-GB')) + '. Choose which copy to keep. The other is replaced, so save a backup first if unsure.</p><div class="row"><button class="btn" type="button" data-act="syncUse" data-v="drive">Use the Drive copy</button><button class="btn ghost" type="button" data-act="syncUse" data-v="local">Keep this device</button></div></div>';
-  h += '<details><summary>One-time setup (about 10 minutes)</summary><ol class="muted">' +
-    '<li>Sign in at console.cloud.google.com with your school Google account and create a project.</li>' +
-    '<li>APIs and services, Library: enable Google Drive API.</li>' +
-    '<li>OAuth consent screen: choose Internal if your school allows it, add the scope drive.appdata.</li>' +
-    '<li>Credentials, Create credentials, OAuth client ID, type Web application. Under Authorised JavaScript origins add your live address (for example https://your-markbook.vercel.app).</li>' +
-    '<li>Paste the Client ID above on each device. Sync only works from that live address, not from a file on your computer.</li></ol>' +
-    '<p class="muted">If your school Google admin blocks outside apps, ask them to allow this Client ID.</p></details></section>';
+  if (ask) h += '<div class="warn" role="alert"><strong>Both copies have changed.</strong><p>Google Drive was last updated ' + esc(ask.when ? new Date(ask.when).toLocaleString('en-GB') : 'earlier') + '. Choose which copy to keep. The other is replaced, so save a backup first if unsure.</p><div class="row"><button class="btn" type="button" data-act="syncUse" data-v="drive">Use the Drive copy</button><button class="btn ghost" type="button" data-act="syncUse" data-v="local">Keep this device</button></div></div>';
+  h += '<details><summary>One-time setup (about 5 minutes)</summary><ol class="muted">' +
+    '<li>In your school Google Drive, create a new Google Sheet. Open Extensions, then Apps Script.</li>' +
+    '<li>Paste in the Markbook sync script (the file Markbook-sync-Code.gs) and change the SECRET line to your own long phrase.</li>' +
+    '<li>Press Save, then Run the function setup once and approve the permissions.</li>' +
+    '<li>Deploy, New deployment, type Web app. Execute as: Me. Who has access: Anyone. Copy the Web app URL.</li>' +
+    '<li>Paste the URL and your secret above, on each device, then press Sync now.</li></ol>' +
+    '<p class="muted">The data is stored as one file in your own Drive. Anyone who has both the address and your secret could read it, so keep the secret private and use a long phrase.</p></details></section>';
   return h;
 }
 
@@ -1432,12 +1420,20 @@ viewSetup = function(){
 };
 viewSettings = function(){
   var th = THEMES.filter(function(t){ return t.id === S.ui.accent; })[0], pl = PALETTES.filter(function(p){ return p.id === S.ui.ratingPal; })[0];
-  return foldify(_viewSettings(), [], {googledrivesync:function(){ return gClient() ? (lsGet(GTIME) ? 'last synced ' + new Date(lsGet(GTIME)).toLocaleDateString('en-GB') : 'ready') : 'not set up'; },
-    themecolour:function(){ return th ? th.name : ''; }, ratingcolours:function(){ return pl ? pl.name : 'Custom'; },
+  return foldify(_viewSettings(), [], {googledrivesync:function(){ return syncReady() ? (lsGet(GTIME) ? 'last synced ' + new Date(lsGet(GTIME)).toLocaleDateString('en-GB') : 'ready') : 'not set up'; },
+    themecolour:function(){ return th ? th.name : ''; }, ratingcolours:function(){ return pl ? pl.name : 'Custom'; }, attainmentwording:function(){ return RLABEL.R + ', Towards, Meeting, ' + RLABEL.B; },
     numberscaleforolderyeargroups:function(){ return 'Years ' + S.ui.numFrom + ' to ' + S.ui.numTo; }, overallattainment:function(){ return 'how it is worked out'; }});
 };
 
-function applyAccent(){ document.documentElement.setAttribute('data-accent', S.ui.accent || 'ink'); applyRatingColours(); }
+function applyLabels(){
+  var lb = (S.ui && S.ui.labels) || {R:'Below', B:'Above'};
+  RLABEL.R = lb.R; RLABEL.B = lb.B; WORD.R = lb.R; WORD.B = lb.B;
+  RATE.forEach(function(r){ if (r.k === 'R' || r.k === 'B') r.label = lb[r.k]; });
+  SUM_COLS[7] = lb.R; SUM_COLS[10] = lb.B; SUM_COLS[11] = '% ' + MOA();
+}
+function MOA(){ return 'Meeting or ' + RLABEL.B.toLowerCase(); }
+function BOT(){ return RLABEL.R + ' or Towards'; }
+function applyAccent(){ document.documentElement.setAttribute('data-accent', S.ui.accent || 'ink'); applyRatingColours(); applyLabels(); }
 /* ---------- rating colours: staff can pick a ready-made palette or set their own four ---------- */
 var PALETTES = [
   {id:'classic', name:'Classic', c:{R:'#c23030', Y:'#f2c230', G:'#23844b', B:'#2a63d1'}},
@@ -1528,7 +1524,7 @@ function overallFor(pupilId, loIds){
   var lv = []; loIds.forEach(function(id){ var m = getMark(pupilId, id); if (m && m.r) lv.push(LEVEL[m.r]); });
   return {r:typicalR(lv), n:lv.length, of:loIds.length};
 }
-function overallText(o, year){ return o.r ? gradeFor(o.r, year) + ' (' + o.n + ' of ' + o.of + ' rated)' : 'Not enough marked yet'; }
+function overallText(o, year){ return o.r ? gradeFor(o.r, year) : 'Not enough marked yet'; }
 
 function phrase(kind, name, text){
   var first = name.split(' ')[0], m = text.match(/^i can\s+(.*)$/i), body = (m ? m[1] : text).replace(/[.\s]+$/, '');
@@ -1621,10 +1617,10 @@ function viewTargets(){
     return '<li class="tcard"><div class="tname"><span class="pn">' + esc(p.name) + '</span><span class="muted mono" style="font-size:12px">' + r.marked + ' of ' + r.total + ' marked</span></div>' +
       (S.ui.tShowA ? '<p class="overall"><span class="muted">Overall attainment</span> <b>' + esc(overallText(overallFor(p.id, scopeLos(scope, yearOfPupil(p.id)).map(function(f){ return f.lo.id; })), yearOfPupil(p.id))) + '</b></p>' : '') +
       (S.ui.tShowO ? '<div class="ovr"><h3>Report overview <span class="muted ovr-count" style="font-weight:400;text-transform:none;letter-spacing:0">' + ov.length + ' characters</span></h3>' +
-        '<textarea class="ovr-ta" rows="3" data-p="' + esc(p.id) + '" aria-label="Report overview for ' + esc(p.name) + '" placeholder="Nothing marked Meeting or Above yet.">' + esc(ov) + '</textarea>' +
+        '<textarea class="ovr-ta" rows="3" data-p="' + esc(p.id) + '" aria-label="Report overview for ' + esc(p.name) + '" placeholder="Nothing marked ' + esc(MOA()) + ' yet.">' + esc(ov) + '</textarea>' +
         (Object.prototype.hasOwnProperty.call(S.ovr, ovrKey(scope, p)) ? '<button type="button" class="btn ghost small" data-act="ovrReset" data-p="' + esc(p.id) + '">Reset to suggested</button>' : '') + '</div>' : '') +
-      (S.ui.tShowS || S.ui.tShowT ? '<div class="tcols">' + (S.ui.tShowS ? '<div><h3>Strengths</h3>' + col(p, r.strengths, 's', 'Nothing marked Meeting or Above yet.') + '</div>' : '') +
-      (S.ui.tShowT ? '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked Below or Towards yet.') + '</div>' : '') + '</div>' : '') +
+      (S.ui.tShowS || S.ui.tShowT ? '<div class="tcols">' + (S.ui.tShowS ? '<div><h3>Strengths</h3>' + col(p, r.strengths, 's', 'Nothing marked ' + MOA() + ' yet.') + '</div>' : '') +
+      (S.ui.tShowT ? '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked ' + BOT() + ' yet.') + '</div>' : '') + '</div>' : '') +
       (S.ui.tShowN ? '<div class="notesblk"><h3>Teacher notes</h3>' + (function(){ var ni = noteItems(p, scope); return ni.length ? ni.map(function(x){
         return '<label class="titem"><input type="checkbox" data-k="' + esc(x.k) + '"' + (S.excl[x.k] ? '' : ' checked') + '><span>' + (x.r ? '<span class="tag" data-r="' + x.r + '">' + esc(gradeFor(x.r, yearOfPupil(p.id))) + '</span> ' : '') + '<span class="muted mono" style="font-size:12px">' + esc(code(x.f.u, x.f.i)) + '</span> <span class="ttext">' + esc(x.n) + '</span></span></label>'; }).join('') : '<p class="muted">No notes added for these units.</p>'; })() + '</div>' : '') + '</li>';
   }).join('');
@@ -1656,6 +1652,16 @@ function viewSettings(){
       return '<button type="button" class="pal" data-act="palette" data-pal="' + p.id + '" aria-pressed="' + (S.ui.ratingPal === p.id) + '"><span class="pal-sw">' + ['R', 'Y', 'G', 'B'].map(function(k){ return '<i style="background:' + p.c[k] + '"></i>'; }).join('') + '</span><span>' + esc(p.name) + '</span></button>'; }).join('') + '</div>' +
     '<h3>Or choose your own</h3><div class="pick">' + ['R', 'Y', 'G', 'B'].map(function(k){ return '<label class="field"><span>' + RLABEL[k] + '</span><input type="color" class="colorpick" id="rc-' + k + '" value="' + ratingHex(k) + '"></label>'; }).join('') + '</div>' +
     '<div class="chips">' + ['R', 'Y', 'G', 'B'].map(function(k){ return '<span class="tag" data-r="' + k + '">' + RLABEL[k] + '</span>'; }).join(' ') + '</div>' +
+  '</section>' +
+  '<section class="card"><h2>Attainment wording</h2><p class="muted">Rename the lowest and highest levels to match your school. Towards and Meeting are fixed. Marks you have already made keep their level and show the new wording.</p>' +
+    '<div class="pick"><label class="field"><span>Lowest level</span><input type="text" id="lb-R" maxlength="22" autocomplete="off" value="' + esc(S.ui.labels.R) + '"></label>' +
+    '<label class="field"><span>Working towards (fixed)</span><input type="text" value="Towards" disabled></label>' +
+    '<label class="field"><span>Expected (fixed)</span><input type="text" value="Meeting" disabled></label>' +
+    '<label class="field"><span>Highest level</span><input type="text" id="lb-B" maxlength="22" autocomplete="off" value="' + esc(S.ui.labels.B) + '"></label></div>' +
+    '<div class="row"><button class="btn ghost small" type="button" data-act="labelPreset" data-r="Below" data-b="Above">Below, Above</button>' +
+    '<button class="btn ghost small" type="button" data-act="labelPreset" data-r="Emerging" data-b="Exceeding">Emerging, Exceeding</button>' +
+    '<button class="btn ghost small" type="button" data-act="labelPreset" data-r="Working below" data-b="Greater depth">Working below, Greater depth</button></div>' +
+    '<div class="chips">' + ['R', 'Y', 'G', 'B'].map(function(k){ return '<span class="tag" data-r="' + k + '">' + esc(RLABEL[k]) + '</span>'; }).join(' ') + '</div>' +
   '</section>' +
   '<section class="card"><h2>Number scale for older year groups</h2>' +
     '<p class="muted">Younger year groups report with the four words. Year groups in this range report with numbers on a 1 to 9 scale, in exports and in Reporting. Your rating colours stay as set above.</p>' +
@@ -1736,6 +1742,12 @@ var NAV_ITEMS = [
   ['export', 'Export', '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 14v5a1 1 0 001 1h14a1 1 0 001-1v-5"/>'],
   ['settings', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>']
 ];
+function paintSync(){
+  var b = document.getElementById('syncBtn'); if (!b) return;
+  b.classList.toggle('spin', !!syncState.busy); b.disabled = !!syncState.busy;
+  var t = syncReady() ? (lsGet(GTIME) ? 'Sync with Google Drive. Last synced ' + new Date(lsGet(GTIME)).toLocaleString('en-GB') : 'Sync with Google Drive') : 'Set up Google Drive sync';
+  b.title = t; b.setAttribute('aria-label', t);
+}
 function paintNav(){
   var n = document.getElementById('nav'); if (!n) return;
   var chip = document.getElementById('chip'); var keep = chip;
@@ -1757,7 +1769,7 @@ function renderNow(refocusId){
   var v = {home:viewHome, mark:viewMarkGrid, targets:viewTargets, plan:viewPlan, settings:viewSettings, setup:viewSetup, 'export':viewExport}[S.ui.tab] || viewHome;
   $('.wrap').setAttribute('data-view', S.ui.tab);
   $('#pageTitle').textContent = PAGE_TITLES[S.ui.tab] || '';
-  paintNav();
+  paintNav(); paintSync();
   app.innerHTML = v(); paintChip();
   if (refocusId) { var el = document.getElementById(refocusId); if (el) el.focus(); }
 }
@@ -2208,6 +2220,7 @@ var actions = {
   syncUse: function(t){ syncChoose(t.dataset.v); },
   tplDownload: downloadTemplate,
   planXlsx: downloadPlan,
+  labelPreset: function(t){ S.ui.labels = {R:t.dataset.r, B:t.dataset.b}; fixUI(); applyLabels(); save(); render(); },
   palette: function(t){ var p = PALETTES.filter(function(x){ return x.id === t.dataset.pal; })[0]; if (!p) return; S.ui.ratingPal = p.id; S.ui.ratingColors = Object.assign({}, p.c); save(); render(); },
   gradePreset: function(t){ var v = String(t.dataset.v).split(',').map(Number); S.ui.gradeMap = {R:v[0], Y:v[1], G:v[2], B:v[3]}; save(); render(); },
   addLoCancel: function(){ S.ui.addLo = false; save(); render(); },
@@ -2324,8 +2337,10 @@ app.addEventListener('change', function(e){
   else if (id === 'gUnit') { S.ui.gridUnit = el.value; save(); render(id); }
   else if (id === 'tClass') { S.ui.tClass = el.value; save(); render(id); }
   else if (id === 'tStrN') { S.ui.tStrN = Number(el.value); save(); render(id); }
-  else if (id === 'gClient') { lsSet(GKEY, el.value.trim()); gTok = null; }
+  else if (id === 'asUrl') { lsSet(GKEY, el.value.trim()); }
+  else if (id === 'asSecret') { lsSet(GSEC, el.value.trim()); }
   else if (id === 'numFrom' || id === 'numTo') { S.ui[id] = parseInt(el.value, 10) || (id === 'numFrom' ? 7 : 11); save(); render(id); }
+  else if (/^lb-[RB]$/.test(id)) { S.ui.labels[id.slice(3)] = el.value; fixUI(); applyLabels(); save(); render(); }
   else if (/^rc-[RYGB]$/.test(id)) { S.ui.ratingColors[id.slice(3)] = el.value; S.ui.ratingPal = 'custom'; save(); render(); }
   else if (/^gm-[RYGB]$/.test(id)) { S.ui.gradeMap[id.slice(3)] = Math.min(9, Math.max(1, parseInt(el.value, 10) || 1)); save(); render(id); }
   else if (id === 'planYear') { S.ui.planYear = el.value; save(); render(id); }
@@ -2340,6 +2355,7 @@ app.addEventListener('keydown', function(e){
   if (e.key === 'Enter' && e.target.id === 'newPupil') { e.preventDefault(); addPupil(); }
 });
 $('#homeBtn').addEventListener('click', function(){ go('home'); });
+$('#syncBtn').addEventListener('click', function(){ syncNow(); });
 $('#nav').addEventListener('click', function(e){ var t = e.target.closest('button[data-tab]'); if (t && t.dataset.act === 'tab') go(t.dataset.tab); });
 $('#chip').addEventListener('click', function(){ go('export'); });
 
