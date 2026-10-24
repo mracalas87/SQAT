@@ -1,3 +1,8 @@
+<!--
+  Markbook by Andy Calas
+  Copyright (c) 2026 Andy Calas. All rights reserved.
+  Not to be copied, redistributed or sold without written permission.
+-->
 <title>Markbook</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,12 +77,15 @@ h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
 p{margin:0}
 .mono{font-family:var(--font-mono)}
 .muted{color:var(--muted)}
+.credit{margin:36px 0 18px;padding-top:12px;border-top:1px solid var(--line, #d9dfdd);font-size:12px;color:var(--muted);text-align:center}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
-.bar-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar-row{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px}
+.hdr-credit{margin-left:auto;margin-right:10px;font:500 12px/1 var(--font-body);color:var(--muted);white-space:nowrap}
+@media (max-width:340px){.hdr-credit{display:none}}
 .wordmark{font:700 19px/1 var(--font-display);letter-spacing:-.01em}
 .logo{display:inline-block;width:28px;height:28px;flex:none}
 .logo svg{width:100%;height:100%;display:block}
@@ -155,6 +163,12 @@ textarea{resize:vertical;line-height:1.45}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field>span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
+.pick select{min-height:48px;font-size:16px}
+.ovr{margin-top:10px;display:grid;gap:6px}
+.ovr h3{font:600 12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:baseline}
+.ovr textarea{line-height:1.45}
+.scopelist{border:1.5px solid var(--line);border-radius:8px;background:var(--surface);padding:2px 12px}
+.scopelist .titem{padding:4px 0}
 .field.wide{grid-column:1/-1}
 
 .lo-card{box-shadow:var(--shadow);margin-top:16px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:18px}
@@ -181,6 +195,9 @@ textarea{resize:vertical;line-height:1.45}
 .note-toggle{background:none;border:1.5px solid var(--line);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted);min-height:28px}
 .note-toggle.has{border-color:var(--accent);color:var(--accent)}
 .note-box{grid-column:1/-1}
+.dictate-row{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.mic{gap:6px;display:inline-flex;align-items:center}
+.mic.live{background:#c0322d;border-color:#c0322d;color:#fff}
 .rates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .rate{
   min-height:46px;padding:4px 2px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);
@@ -242,11 +259,12 @@ tfoot td,tfoot th{font:500 12px var(--font-mono);color:var(--muted);border-botto
   <header class="bar">
     <div class="bar-row">
       <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect width="24" height="24" rx="6" style="fill:var(--accent)"/><path d="M6.5 12.5l3.6 3.6 7.4-8" style="fill:none;stroke:var(--on-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"/></svg></span><span class="wordmark">Markbook</span></div>
-      <button id="homeBtn" class="btn ghost small" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button>
+      <span class="hdr-credit">&copy; 2026 Andy Calas.</span><button id="homeBtn" class="btn ghost small" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button>
     </div>
   </header>
   <div class="page-head"><h1 class="page-title" id="pageTitle"></h1><button id="chip" class="chip" type="button"></button></div>
   <main id="app"></main>
+  <footer class="credit">Markbook by Andy Calas &middot; &copy; 2026 Andy Calas. All rights reserved.</footer>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
@@ -263,7 +281,7 @@ var RATE = [
   {k:'B', label:'Above',   meaning:'Above expected'}
 ];
 var MEAN = {}; RATE.forEach(function(r){ MEAN[r.k] = r.meaning; });
-var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, accent:'ink'};
+var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, tOvrN:4, tShowO:true, tShowS:true, tShowT:true, accent:'ink'};
 
 var $ = function(s, r){ return (r || document).querySelector(s); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -278,6 +296,7 @@ var SAMPLE_LAST = ['Hart','Patel','Santos','Reid','Fernandes','Okafor','Brooks',
 var SAMPLE_FORMS = [['5','5A'],['5','5B'],['5','5C'],['6','6A'],['6','6B']];
 var SAMPLE_CURRIC = [
   'Unit: Selection in physical computing',
+  'Year: 5',
   'Summary: Pupils program a device to respond to inputs using if and else.',
   'I can control an output on a physical device with a program',
   '- Build a sequence of blocks that switches an output on and off',
@@ -290,6 +309,7 @@ var SAMPLE_CURRIC = [
   '- Test, debug and improve the program',
   '',
   'Unit: Vector drawing',
+  'Year: 5',
   'Summary: Pupils create and edit shapes in a vector graphics tool.',
   'I can create and edit vector shapes',
   '- Draw and resize shapes using handles',
@@ -299,15 +319,41 @@ var SAMPLE_CURRIC = [
   '- Order layers so the drawing reads correctly',
   'I can export and share a finished drawing',
   '- Choose a suitable file type',
-  '- Save and name the file clearly'
+  '- Save and name the file clearly',
+  '',
+  'Unit: Variables in games',
+  'Year: 6',
+  'Summary: Pupils use variables to keep score and track lives in a simple game.',
+  'I can explain what a variable is',
+  '- Name a variable and give an example of its value',
+  '- Show how a variable changes during a program',
+  'I can use a variable to keep a score',
+  '- Create a score variable',
+  '- Increase the score when the player succeeds',
+  'I can test and debug a game that uses variables',
+  '- Predict what the score should be',
+  '- Find and fix a fault in the scoring',
+  '',
+  'Unit: Spreadsheets for data',
+  'Year: 6',
+  'Summary: Pupils enter, format and analyse data in a spreadsheet.',
+  'I can enter and format data in a spreadsheet',
+  '- Enter data in rows and columns',
+  '- Format cells for numbers and text',
+  'I can use a formula to calculate a total',
+  '- Write a sum formula',
+  '- Check the result is correct',
+  'I can present data in a chart',
+  '- Choose a suitable chart type',
+  '- Add a title and labels'
 ].join('\n');
 
-function blank(){ return {v:1, sample:null, classes:[], units:[], marks:{}, excl:{}, lastExport:null, dirty:0, ui:Object.assign({}, DEF_UI)}; }
+function blank(){ return {v:1, sample:null, classes:[], units:[], marks:{}, excl:{}, ovr:{}, lastExport:null, dirty:0, ui:Object.assign({}, DEF_UI)}; }
 
 function seed(){
   var s = blank(), seedN = 7;
   var rnd = function(){ seedN = (seedN * 1103515245 + 12345) % 2147483648; return seedN / 2147483648; };
-  s.sample = {classes:true, units:true, v:2};
+  s.sample = {classes:true, units:true, v:3};
   var n = 0;
   s.classes = SAMPLE_FORMS.map(function(f){
     var pupils = [];
@@ -323,7 +369,7 @@ function seed(){
   var notes = ['Needed a prompt to test the program on the device.', 'Explained the condition clearly to a partner.', 'Confident with handles, still tidying outlines.', 'Much more independent than at the start of the unit.'];
   var ni = 0;
   s.classes.forEach(function(c){ c.pupils.forEach(function(p){
-    s.units.forEach(function(u, ui){ u.los.forEach(function(lo, li){
+    s.units.filter(function(u){ return !u.year || normYear(u.year) === normYear(c.year); }).forEach(function(u, ui){ u.los.forEach(function(lo, li){
       /* Unit 1 fully assessed, unit 2 mostly assessed, last LO of unit 2 only partly */
       if (ui === 1 && li === 2 && rnd() < 0.7) return;
       var cur = pick(), m = {r:cur, n:'', d: ui === 0 ? '2026-09-29' : '2026-10-16', h:[]};
@@ -354,16 +400,31 @@ function save(){ clearTimeout(saveTimer); saveTimer = setTimeout(flush, 250); }
 
 var S = load() || seed();
 /* Refresh an untouched older sample so it shows the current example data */
-if (S.sample && S.sample.classes && S.sample.units && S.sample.v !== 2) { var oldUi = S.ui; S = seed(); S.ui = Object.assign({}, DEF_UI, oldUi || {}); }
+if (S.sample && S.sample.classes && S.sample.units && S.sample.v !== 3) { var oldUi = S.ui; S = seed(); S.ui = Object.assign({}, DEF_UI, oldUi || {}); }
 S.ui = Object.assign({}, DEF_UI, S.ui || {});
 S.ui.tab = 'home';
 if (!S.excl) S.excl = {};
+if (!S.ovr) S.ovr = {};
 if (typeof S.dirty !== 'number') S.dirty = 0;
 
 /* ---------- model helpers ---------- */
 var mk = function(p, l){ return p + '|' + l; };
-var code = function(u, i){ return 'U' + (S.units.indexOf(u) + 1) + '-L' + (i + 1); };
-var flat = function(){ return S.units.reduce(function(a, u){ return a.concat(u.los.map(function(lo, i){ return {u:u, lo:lo, i:i}; })); }, []); };
+function normYear(v){ return String(v == null ? '' : v).trim().replace(/^(?:year\s*group|year|yr|y)\s*/i, '').trim(); }
+function splitYears(v){ return String(v == null ? '' : v).split(/\s*(?:,|;|&|\/|\band\b)\s*/i).map(normYear).filter(function(y){ return y && !/^(?:all|any|every|all years?|every year)$/i.test(y); }); }
+function unitIdFor(title, year){ return 'u-' + (slug(title) || hash(title)) + (year ? '-y' + slug(year) : ''); }
+function loIdFor(title, text, year){ return 'l-' + hash(title + '|' + text + (year ? '|y' + year : '')); }
+function stampYear(u, year){ u.year = year; u.id = unitIdFor(u.title, year); u.los.forEach(function(l){ l.id = loIdFor(u.title, l.text, year); }); return u; }
+function expandYears(u){
+  var ys = u._years || []; delete u._years;
+  if (ys.length <= 1) { if (ys[0]) stampYear(u, ys[0]); else u.year = ''; return [u]; }
+  return ys.map(function(y){ return stampYear(JSON.parse(JSON.stringify(u)), y); });
+}
+/* A unit with no year group applies to every year. A unit with a year group applies only to forms in that year. */
+function unitsFor(year){ var y = normYear(year); return S.units.filter(function(u){ return !u.year || normYear(u.year) === y; }); }
+function yearOfClass(id){ var c = S.classes.filter(function(x){ return x.id === id; })[0]; return c ? c.year : ''; }
+function yearOfPupil(pid){ for (var i = 0; i < S.classes.length; i++) for (var j = 0; j < S.classes[i].pupils.length; j++) if (S.classes[i].pupils[j].id === pid) return S.classes[i].year; return ''; }
+var code = function(u, i){ var grp = S.units.filter(function(x){ return (x.year || '') === (u.year || ''); }); return 'U' + (grp.indexOf(u) + 1) + '-L' + (i + 1); };
+var flat = function(year){ return (year === undefined ? S.units : unitsFor(year)).reduce(function(a, u){ return a.concat(u.los.map(function(lo, i){ return {u:u, lo:lo, i:i}; })); }, []); };
 function getMark(p, l){ return S.marks[mk(p, l)] || null; }
 
 function fixUI(){
@@ -372,14 +433,21 @@ function fixUI(){
   if (!S.classes.some(function(c){ return c.id === u.classId; })) u.classId = S.classes.length ? S.classes[0].id : '';
   if (!S.classes.some(function(c){ return c.id === u.gridClass; })) u.gridClass = u.classId;
   if (!S.classes.some(function(c){ return c.id === u.tClass; })) u.tClass = u.classId;
-  if (u.tScope !== 'all' && !S.units.some(function(x){ return x.id === u.tScope; })) u.tScope = 'all';
+  if (u.tScope !== 'all') {
+    var okIds = unitsFor(yearOfClass(u.tClass)).map(function(x){ return x.id; });
+    var keep = String(u.tScope).split('+').filter(function(i){ return okIds.indexOf(i) >= 0; });
+    u.tScope = keep.length ? keep.join('+') : 'all';
+  }
+  u.tOvrN = [2, 3, 4, 5, 6].indexOf(Number(u.tOvrN)) >= 0 ? Number(u.tOvrN) : 4;
+  u.tShowO = u.tShowO !== false; u.tShowS = u.tShowS !== false; u.tShowT = u.tShowT !== false;
   u.tStrN = [1, 2, 3].indexOf(Number(u.tStrN)) >= 0 ? Number(u.tStrN) : 3;
   u.tTarN = [1, 2, 3].indexOf(Number(u.tTarN)) >= 0 ? Number(u.tTarN) : 3;
   if (!THEMES.some(function(t){ return t.id === u.accent; })) u.accent = 'ink';
-  if (!S.units.some(function(x){ return x.id === u.unitId; })) u.unitId = S.units.length ? S.units[0].id : '';
-  var un = S.units.filter(function(x){ return x.id === u.unitId; })[0];
+  var avail = unitsFor(yearOfClass(u.classId));
+  if (!avail.some(function(x){ return x.id === u.unitId; })) u.unitId = avail.length ? avail[0].id : '';
+  var un = avail.filter(function(x){ return x.id === u.unitId; })[0];
   if (!un || !un.los.some(function(l){ return l.id === u.loId; })) u.loId = un ? un.los[0].id : '';
-  if (u.gridUnit !== 'all' && !S.units.some(function(x){ return x.id === u.gridUnit; })) u.gridUnit = 'all';
+  if (u.gridUnit !== 'all' && !unitsFor(yearOfClass(u.gridClass)).some(function(x){ return x.id === u.gridUnit; })) u.gridUnit = 'all';
 }
 function cur(){
   var u = S.ui;
@@ -414,7 +482,7 @@ function cellNote(m){
   if (m.h && m.h.length) parts.push('History: ' + history(m).map(function(e){ return (WORD[e.r] || e.r) + (e.d ? ' (' + shortDate(e.d) + ')' : ''); }).join(' > '));
   return parts.join('\n\n');
 }
-function addCellNote(ws, r, c, m){ var t = cellNote(m); if (t) { var a = XLSX.utils.encode_cell({r:r, c:c}); if (ws[a]) ws[a].c = [{a:'Markbook', t:t}]; } }
+function addCellNote(ws, r, c, m){ var t = cellNote(m); if (t) { var a = XLSX.utils.encode_cell({r:r, c:c}); if (ws[a]) { ws[a].c = [{a:'Markbook', t:t}]; ws[a].c.hidden = true; } } }
 function changed(m){ return !!(m && m.r && m.h && m.h.length); }
 /* Progress: the current rating is higher than the first one recorded */
 function improved(m){ if (!changed(m)) return false; var f = history(m)[0]; return LEVEL[m.r] > LEVEL[f.r]; }
@@ -471,7 +539,7 @@ function parseDelimited(text){
 
 function parsePupils(rows, defForm, defYear){
   var clean = rows.map(function(r){ return r.map(function(c){ return String(c == null ? '' : c).trim(); }); })
-                  .filter(function(r){ return r.some(Boolean); });
+                  .filter(function(r){ return r.some(Boolean) && !/^e\.g\./i.test(r[0]); });
   if (!clean.length) return {groups:[], count:0};
   var head = clean[0].map(function(c){ return c.toLowerCase(); });
   var find = function(re){ for (var i = 0; i < head.length; i++) if (re.test(head[i])) return i; return -1; };
@@ -501,26 +569,32 @@ function parsePupils(rows, defForm, defYear){
   return {groups:order.map(function(k){ return map[k]; }), count:count};
 }
 
+/* Success criteria can be separated by a semicolon, a new line, or a comma followed by a capital letter.
+   A comma followed by a lower-case word stays inside the criterion, for example "Plan the inputs, outputs and conditions". */
+function splitCriteria(v){
+  return String(v == null ? '' : v).split(/\s*;\s*|\r?\n|,\s+(?=[A-Z])/).map(function(x){ return x.replace(/^[-•*]\s*/, '').trim(); }).filter(Boolean);
+}
 function parseCurriculum(text){
   var units = [], u = null, lo = null;
-  var newUnit = function(t){ u = {id:'u-' + (slug(t) || hash(t)), title:t, summary:'', los:[]}; units.push(u); lo = null; };
+  var newUnit = function(t){ u = {id:unitIdFor(t, ''), title:t, year:'', _years:[], summary:'', los:[]}; units.push(u); lo = null; };
   String(text).split(/\r?\n/).forEach(function(raw){
     var line = raw.trim(); if (!line) return;
     var m;
     if ((m = line.match(/^(?:unit\s*:|#{1,3}\s)\s*(.+)$/i))) { newUnit(m[1].trim()); return; }
+    if ((m = line.match(/^(?:year(?:\s*group)?|yr)\s*:\s*(.+)$/i))) { if (!u) newUnit('Untitled unit'); u._years = splitYears(m[1]); return; }
     if ((m = line.match(/^(?:summary|notes?)\s*:\s*(.*)$/i))) { if (!u) newUnit('Untitled unit'); u.summary = (u.summary ? u.summary + ' ' : '') + m[1].trim(); return; }
     if ((m = line.match(/^[-•*–]\s+(.+)$/))) { if (lo) lo.criteria.push(m[1].trim()); return; }
     if (!u) newUnit('Untitled unit');
     var cells = line.split('\t').map(function(c){ return c.trim(); }).filter(Boolean);
     var t = cells.shift().replace(/^(?:lo\s*\d*\s*[:.)-]\s*|\d+\s*[.)]\s+)/i, '').trim();
     if (!t) return;
-    var crit = []; cells.forEach(function(c){ c.split(/\s*;\s*/).forEach(function(x){ if (x) crit.push(x); }); });
-    var id = 'l-' + hash(u.title + '|' + t);
+    var crit = []; cells.forEach(function(c){ splitCriteria(c).forEach(function(x){ crit.push(x); }); });
+    var id = loIdFor(u.title, t, '');
     if (u.los.some(function(l){ return l.id === id; })) return;
     lo = {id:id, text:t, criteria:crit};
     u.los.push(lo);
   });
-  return units.filter(function(x){ return x.los.length; });
+  return units.filter(function(x){ return x.los.length; }).reduce(function(a, x){ return a.concat(expandYears(x)); }, []);
 }
 
 /* ---------- toast, chip ---------- */
@@ -540,7 +614,7 @@ function selOpts(items, curId, val, lab){
 }
 function banner(){
   if (S.sample && (S.sample.classes || S.sample.units))
-    return '<p class="banner">Sample data: Years 5 and 6 with example pupils, two units and some ratings that improved over time (starred). Importing your own class list or objectives in Set up replaces the matching sample.</p>';
+    return '<p class="banner">Sample data: Years 5 and 6 with example pupils, two units for each year group and some ratings that improved over time (starred). Importing your own class list or objectives in Set up replaces the matching sample.</p>';
   return '';
 }
 function empty(msg, btn, tab){
@@ -568,19 +642,20 @@ function pupilRow(p, i, lo){
     '<div class="who"><span class="pn">' + esc(p.name) + (wasText(m) ? '<span class="was">' + (improved(m) ? '\u2605 ' : '') + esc(wasText(m)) + '</span>' : '') + '</span>' +
     '<button type="button" class="note-toggle' + (m.n ? ' has' : '') + '" data-act="note" aria-expanded="' + (!!m.n) + '" aria-label="Note for ' + esc(p.name) + '">Note</button></div>' +
     '<div class="rates" role="group" aria-label="Rating for ' + esc(p.name) + '">' + btns + '</div>' +
-    '<div class="note-box"' + (m.n ? '' : ' hidden') + '><textarea id="note-' + i + '" rows="2" placeholder="Observation note (optional)" aria-label="Note for ' + esc(p.name) + '">' + esc(m.n) + '</textarea></div>' +
+    '<div class="note-box"' + (m.n ? '' : ' hidden') + '><textarea id="note-' + i + '" rows="2" placeholder="Observation note (optional)" aria-label="Note for ' + esc(p.name) + '">' + esc(m.n) + '</textarea>' +
+      (SPEECH ? '<div class="dictate-row"><button type="button" class="btn ghost small mic" data-act="dictate" aria-pressed="false" aria-label="Dictate note for ' + esc(p.name) + '">' + MIC + '<span>Dictate</span></button><span class="count" style="margin:0">Spoken notes are turned into text by your browser\'s speech service.</span></div>' : '') + '</div>' +
   '</li>';
 }
 
 function viewMark(){
   var c = cur();
   if (!c.cls || !c.unit || !c.lo) return banner() + empty('Add a class list and some learning objectives to start marking.', 'Go to Set up', 'setup');
-  var pos = flat().map(function(f){ return f.lo.id; }).indexOf(c.lo.id), total = flat().length;
+  var pos = flat(c.cls.year).map(function(f){ return f.lo.id; }).indexOf(c.lo.id), total = flat(c.cls.year).length;
   var i = c.unit.los.indexOf(c.lo);
   return banner() +
   '<section class="pick">' +
     '<label class="field"><span>Form</span><select id="selClass">' + selOpts(S.classes, S.ui.classId, function(x){ return x.id; }, function(x){ return x.name + (x.year ? ' (Year ' + x.year + ')' : ''); }) + '</select></label>' +
-    '<label class="field"><span>Unit</span><select id="selUnit">' + selOpts(S.units, S.ui.unitId, function(x){ return x.id; }, function(x){ return x.title; }) + '</select></label>' +
+    '<label class="field wide"><span>Unit</span><select id="selUnit">' + selOpts(unitsFor(c.cls.year), S.ui.unitId, function(x){ return x.id; }, function(x){ return x.title; }) + '</select></label>' +
     '<label class="field wide"><span>Learning objective</span><select id="selLO">' + c.unit.los.map(function(l, k){ return '<option value="' + esc(l.id) + '"' + (l.id === c.lo.id ? ' selected' : '') + '>' + esc(code(c.unit, k) + '  ' + l.text) + '</option>'; }).join('') + '</select></label>' +
   '</section>' +
   '<section class="lo-card">' +
@@ -602,10 +677,11 @@ function viewMark(){
 function viewGrid(){
   var cls = S.classes.filter(function(c){ return c.id === S.ui.gridClass; })[0];
   if (!cls || !S.units.length) return banner() + empty('Add a class list and some learning objectives to see the grid.', 'Go to Set up', 'setup');
-  var units = S.ui.gridUnit === 'all' ? S.units : S.units.filter(function(x){ return x.id === S.ui.gridUnit; });
+  var gridBase = unitsFor(cls.year);
+  var units = S.ui.gridUnit === 'all' ? gridBase : gridBase.filter(function(x){ return x.id === S.ui.gridUnit; });
   var cols = [];
   units.forEach(function(un){ un.los.forEach(function(lo, i){ cols.push({un:un, lo:lo, code:code(un, i)}); }); });
-  var unitOpts = '<option value="all"' + (S.ui.gridUnit === 'all' ? ' selected' : '') + '>All units</option>' + selOpts(S.units, S.ui.gridUnit, function(x){ return x.id; }, function(x){ return x.title; });
+  var unitOpts = '<option value="all"' + (S.ui.gridUnit === 'all' ? ' selected' : '') + '>All units</option>' + selOpts(gridBase, S.ui.gridUnit, function(x){ return x.id; }, function(x){ return x.title; });
   var rows = cls.pupils.map(function(p){
     var secure = 0, marked = 0;
     var cells = cols.map(function(cl){
@@ -624,7 +700,7 @@ function viewGrid(){
   return banner() +
   '<section class="pick">' +
     '<label class="field"><span>Form</span><select id="gClass">' + selOpts(S.classes, S.ui.gridClass, function(x){ return x.id; }, function(x){ return x.name; }) + '</select></label>' +
-    '<label class="field"><span>Unit</span><select id="gUnit">' + unitOpts + '</select></label>' +
+    '<label class="field wide"><span>Unit</span><select id="gUnit">' + unitOpts + '</select></label>' +
   '</section>' +
   legendHTML() +
   '<div class="scroll"><table><thead><tr><th class="sticky" scope="col">Pupil</th>' + cols.map(function(cl){ return '<th scope="col" title="' + esc(cl.lo.text) + '">' + esc(cl.code) + '</th>'; }).join('') + '<th scope="col" title="Meeting or above, out of marked">M+</th></tr></thead>' +
@@ -644,7 +720,7 @@ function viewSetup(){
   }).join('');
   var unitItems = S.units.map(function(u){
     var open = S.ui.editUnit === u.id;
-    return '<li><span><b>' + esc(u.title) + '</b> <span class="muted">' + u.los.length + ' objectives</span></span>' +
+    return '<li><span><b>' + esc(u.title) + '</b> <span class="muted">' + (u.year ? 'Year ' + esc(u.year) : 'All years') + ' · ' + u.los.length + ' objectives</span></span>' +
       '<span class="row"><button class="btn ghost small" type="button" data-act="editUnit" data-id="' + esc(u.id) + '" aria-expanded="' + open + '">' + (open ? 'Close' : 'Edit unit') + '</button>' +
       '<button class="btn ghost small" type="button" data-act="rmUnit" data-id="' + esc(u.id) + '">Remove</button></span>' +
       (open ? unitEditor(u) : '') + '</li>';
@@ -652,7 +728,7 @@ function viewSetup(){
   return banner() +
   '<section class="card"><h2>1. Class lists</h2>' +
     '<p class="muted">Upload a CSV or Excel file with columns for name, form and year group, or paste names below. Headers are optional. Without them, columns are read as name, form, year. Adding to a form that already exists keeps the pupils already there.</p>' +
-    '<div class="row"><label class="btn filebtn" for="fileInput">Choose CSV or Excel file<input class="vh" id="fileInput" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls"></label></div>' +
+    '<div class="row"><label class="btn filebtn" for="fileInput">Choose CSV or Excel file<input class="vh" id="fileInput" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls"></label><button class="btn ghost" type="button" data-act="classTemplate">Download class list template</button></div>' +
     '<label class="field"><span>Or paste names (one per line)</span><textarea id="pasteNames" rows="5" class="ta-mono" placeholder="Amelia Hart&#10;Arjun Patel&#10;or: Name, Form, Year"></textarea></label>' +
     '<div class="row"><label class="field"><span>Form if not given</span><input type="text" id="defForm" placeholder="e.g. 5A"></label><label class="field"><span>Year if not given</span><input type="text" id="defYear" placeholder="e.g. 5"></label></div>' +
     '<div class="row"><button class="btn" type="button" data-act="importNames">Add pupils</button></div>' +
@@ -680,7 +756,7 @@ function viewSetup(){
 var COLS = ['Year group','Form','Pupil','Unit','LO ref','Learning objective','Rating','Rating meaning','Note','Date observed','First rating','First date','Progress','Times marked'];
 function longRows(){
   var out = [];
-  S.classes.forEach(function(c){ c.pupils.forEach(function(p){ S.units.forEach(function(u){ u.los.forEach(function(lo, i){
+  S.classes.forEach(function(c){ c.pupils.forEach(function(p){ unitsFor(c.year).forEach(function(u){ u.los.forEach(function(lo, i){
     var m = S.marks[mk(p.id, lo.id)]; if (!m || (!m.r && !m.n)) return;
     var o = {}; o[COLS[0]] = c.year; o[COLS[1]] = c.name; o[COLS[2]] = p.name; o[COLS[3]] = u.title; o[COLS[4]] = code(u, i);
     o[COLS[5]] = lo.text; o[COLS[6]] = m.r || ''; o[COLS[7]] = MEAN[m.r] || ''; o[COLS[8]] = m.n || ''; o[COLS[9]] = m.d || '';
@@ -699,25 +775,20 @@ function toCSV(rows, cols){
   return '﻿' + [cols.map(q).join(',')].concat(rows.map(function(r){ return cols.map(function(c){ return q(r[c]); }).join(','); })).join('\r\n');
 }
 function buildXlsx(){
-  var rows = longRows(), wb = XLSX.utils.book_new();
+  var rows = longRows(), wb = stamp(XLSX.utils.book_new());
   var obs = XLSX.utils.aoa_to_sheet([COLS].concat(rows.map(function(r){ return COLS.map(function(c){ return r[c]; }); })));
   obs['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:28},{wch:8},{wch:50},{wch:7},{wch:24},{wch:36},{wch:13},{wch:11},{wch:12},{wch:14},{wch:12}];
-  var codes = [], los = [];
-  S.units.forEach(function(u){ u.los.forEach(function(lo, i){ codes.push(code(u, i)); los.push({u:u, lo:lo, c:code(u, i)}); }); });
-  var grid = [['Year group','Form','Pupil'].concat(codes)];
-  S.classes.forEach(function(c){ c.pupils.forEach(function(p){
-    grid.push([c.year, c.name, p.name].concat(los.map(function(x){ var m = S.marks[mk(p.id, x.lo.id)]; return m && m.r ? m.r + (improved(m) ? ' \u2605' : '') : ''; })));
-  }); });
-  var g = XLSX.utils.aoa_to_sheet(grid);
+  var losFor = function(year){ var out = []; unitsFor(year).forEach(function(u){ u.los.forEach(function(lo, i){ out.push({u:u, lo:lo, c:code(u, i)}); }); }); return out; };
   var usedNames = {};
   var wrapLn = function(t, w){ var out = [], line = ''; String(t).split(/\s+/).forEach(function(wd){ if (line && (line + ' ' + wd).length > w) { out.push(line); line = wd; } else line = line ? line + ' ' + wd : wd; }); if (line) out.push(line); return out; };
   S.classes.forEach(function(c){
     var nm = String(c.name).replace(/[\\\/?*\[\]:]/g, '-').slice(0, 28) || 'Form', k = 2, base = nm;
     while (usedNames[nm.toLowerCase()] || /^(data|history|curriculum|reporting|key)$/i.test(nm)) nm = base + ' ' + (k++);
     usedNames[nm.toLowerCase()] = 1;
+    var los = losFor(c.year);
     /* Each objective gets two columns: Rating and Notes. Unit and objective headings merge across them. */
     var r1 = ['Unit'], r2 = ['Unit summary'], r3 = ['Objective'], hdr = ['Pupil'], merges = [], col = 1;
-    S.units.forEach(function(u){
+    unitsFor(c.year).forEach(function(u){
       var n = u.los.length; if (!n) return;
       var span = n * 2;
       r1.push(u.title); r2.push(u.summary || '');
@@ -743,27 +814,27 @@ function buildXlsx(){
     });
     var fsh = XLSX.utils.aoa_to_sheet(fs); fsh['!merges'] = merges;
     c.pupils.forEach(function(p, pi){ los.forEach(function(x, j){ var m = S.marks[mk(p.id, x.lo.id)];
-      if (changed(m)) { var a = XLSX.utils.encode_cell({r:base0 + pi, c:1 + j * 2}); var h = 'History: ' + history(m).map(function(e){ return (WORD[e.r] || e.r) + (e.d ? ' (' + shortDate(e.d) + ')' : ''); }).join(' > '); if (fsh[a]) fsh[a].c = [{a:'Markbook', t:h}]; }
+      if (changed(m)) { var a = XLSX.utils.encode_cell({r:base0 + pi, c:1 + j * 2}); var h = 'History: ' + history(m).map(function(e){ return (WORD[e.r] || e.r) + (e.d ? ' (' + shortDate(e.d) + ')' : ''); }).join(' > '); if (fsh[a]) { fsh[a].c = [{a:'Markbook', t:h}]; fsh[a].c.hidden = true; } }
     }); });
     var cw = [{wch:24}]; los.forEach(function(){ cw.push({wch:8}, {wch:32}); });
     fsh['!cols'] = cw;
     XLSX.utils.book_append_sheet(wb, fsh, nm);
   });
   var hrows = [['Year group','Form','Pupil','Unit','LO ref','Learning objective','Rating','Rating meaning','Date','Current']];
-  S.classes.forEach(function(c){ c.pupils.forEach(function(p){ los.forEach(function(x){
+  S.classes.forEach(function(c){ var cl = losFor(c.year); c.pupils.forEach(function(p){ cl.forEach(function(x){
     var m = S.marks[mk(p.id, x.lo.id)]; if (!changed(m)) return;
     history(m).forEach(function(e, k, arr){ hrows.push([c.year, c.name, p.name, x.u.title, x.c, x.lo.text, e.r, MEAN[e.r] || '', e.d, k === arr.length - 1 ? 'Yes' : 'No']); });
   }); }); });
   var hs = XLSX.utils.aoa_to_sheet(hrows); hs['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:28},{wch:8},{wch:50},{wch:7},{wch:24},{wch:12},{wch:9}];
   XLSX.utils.book_append_sheet(wb, hs, 'History');
-  var cur2 = [['Unit','Unit summary','Learning objective','Success criteria','LO ref']];
-  los.forEach(function(x){ cur2.push([x.u.title, x.u.summary || '', x.lo.text, x.lo.criteria.join('; '), x.c]); });
-  var cs = XLSX.utils.aoa_to_sheet(cur2); cs['!cols'] = [{wch:28},{wch:44},{wch:50},{wch:60},{wch:8}];
+  var cur2 = [['Year group','Unit','Unit summary','Learning objective','Success criteria','LO ref']];
+  S.units.forEach(function(u){ u.los.forEach(function(lo, i){ cur2.push([u.year || 'All', u.title, u.summary || '', lo.text, lo.criteria.join('; '), code(u, i)]); }); });
+  var cs = XLSX.utils.aoa_to_sheet(cur2); cs['!cols'] = [{wch:11},{wch:28},{wch:44},{wch:50},{wch:60},{wch:8}];
   XLSX.utils.book_append_sheet(wb, cs, 'Curriculum');
   var stAll = []; S.classes.forEach(function(c){ stAll = stAll.concat(stRows(c, 'all')); });
   var sc = stCols();
   var sts = XLSX.utils.aoa_to_sheet([sc].concat(stAll.map(function(r){ return sc.map(function(k){ return r[k]; }); })));
-  sts['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(sc.slice(4).map(function(){ return {wch:48}; }));
+  sts['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(sc.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : 48}; }));
   XLSX.utils.book_append_sheet(wb, sts, 'Reporting');
   var key = XLSX.utils.aoa_to_sheet([['Rating','Meaning']].concat(RATE.map(function(r){ return [r.k, r.meaning]; }).concat([['\u2605','Has made progress: the rating is higher than when first recorded. See the History sheet for every dated rating.'],['Red corner mark','On a rating that has changed (up or down): hover in Excel to see the earlier ratings and dates.'],['Notes','Observation note for that pupil and objective, beside the rating.']])));
   key['!cols'] = [{wch:8},{wch:28}];
@@ -813,45 +884,102 @@ function applyAccent(){ document.documentElement.setAttribute('data-accent', S.u
 /* ---------- strengths and targets ---------- */
 function stCols(){
   var c = ['Year group', 'Form', 'Pupil', 'Scope'], i;
-  for (i = 0; i < S.ui.tStrN; i++) c.push('Strength ' + (i + 1));
-  for (i = 0; i < S.ui.tTarN; i++) c.push('Target ' + (i + 1));
+  if (S.ui.tShowO) c.push('Report overview');
+  if (S.ui.tShowS) for (i = 0; i < S.ui.tStrN; i++) c.push('Strength ' + (i + 1));
+  if (S.ui.tShowT) for (i = 0; i < S.ui.tTarN; i++) c.push('Target ' + (i + 1));
   return c;
 }
 var RANK = {B:0, G:1, R:0, Y:1};
 var RLABEL = {R:'Below', Y:'Towards', G:'Meeting', B:'Above'};
-function scopeLos(scope){ return flat().filter(function(f){ return scope === 'all' || f.u.id === scope; }); }
+function scopeIds(scope){ return scope === 'all' ? [] : String(scope).split('+'); }
+function scopeLos(scope, year){ var ids = scopeIds(scope); return flat(year).filter(function(f){ return !ids.length || ids.indexOf(f.u.id) >= 0; }); }
 function scopeLabel(scope){
   if (scope === 'all') return 'End of year (all units)';
-  var u = S.units.filter(function(x){ return x.id === scope; })[0]; return u ? u.title : '';
+  var ids = scopeIds(scope), t = S.units.filter(function(x){ return ids.indexOf(x.id) >= 0; }).map(function(x){ return x.title; });
+  return t.join(', ');
 }
 function strengthsTargets(p, scope){
-  var los = scopeLos(scope), items = [];
+  var los = scopeLos(scope, yearOfPupil(p.id)), items = [];
   los.forEach(function(f, n){ var m = getMark(p.id, f.lo.id); if (m && m.r) items.push({f:f, r:m.r, d:m.d || '', n:n}); });
-  var cmp = function(a, b){ return (RANK[a.r] - RANK[b.r]) || (a.d < b.d ? 1 : a.d > b.d ? -1 : 0) || (a.n - b.n); };
-  return {
-    marked: items.length, total: los.length,
-    strengths: items.filter(function(x){ return x.r === 'B' || x.r === 'G'; }).sort(cmp).slice(0, S.ui.tStrN),
-    targets: items.filter(function(x){ return x.r === 'R' || x.r === 'Y'; }).sort(cmp).slice(0, S.ui.tTarN)
-  };
+  var recent = function(a, b){ return (a.d < b.d ? 1 : a.d > b.d ? -1 : 0) || (a.n - b.n); };
+  var cmp = function(a, b){ return (RANK[a.r] - RANK[b.r]) || recent(a, b); };
+  var nS = S.ui.tStrN, nT = S.ui.tTarN;
+  var strong = items.filter(function(x){ return x.r === 'B' || x.r === 'G'; }).sort(cmp);
+  var weak = items.filter(function(x){ return x.r === 'R' || x.r === 'Y'; }).sort(cmp);
+  var strengths = strong.slice(0, nS), targets = weak.slice(0, nT);
+  var flag = function(list){ return list.map(function(x){ var c = {}; Object.keys(x).forEach(function(k){ c[k] = x[k]; }); c.fb = true; return c; }); };
+  if (items.length > 1) {
+    if (!strong.length) {
+      /* Nothing at Meeting or Above: use the pupil's highest ratings as strengths, keeping at least one objective for targets */
+      var hi = items.slice().sort(function(a, b){ return (LEVEL[b.r] - LEVEL[a.r]) || recent(a, b); }).slice(0, Math.min(nS, items.length - 1));
+      var used = {}; hi.forEach(function(x){ used[x.f.lo.id] = 1; });
+      strengths = flag(hi);
+      targets = weak.filter(function(x){ return !used[x.f.lo.id]; }).slice(0, nT);
+    } else if (!weak.length) {
+      /* Nothing below Meeting: use the pupil's lowest ratings as targets, keeping at least one objective for strengths */
+      strengths = strong.slice(0, Math.min(nS, items.length - 1));
+      var inS = {}; strengths.forEach(function(x){ inS[x.f.lo.id] = 1; });
+      var lo2 = strong.filter(function(x){ return !inS[x.f.lo.id]; }).sort(function(a, b){ return (LEVEL[a.r] - LEVEL[b.r]) || recent(a, b); }).slice(0, nT);
+      targets = flag(lo2);
+    }
+  }
+  return {marked: items.length, total: los.length, strengths: strengths, targets: targets};
 }
 function stKey(scope, p, lo){ return scope + '|' + p.id + '|' + lo.id; }
 function phrase(kind, name, text){
   var first = name.split(' ')[0], m = text.match(/^i can\s+(.*)$/i), body = (m ? m[1] : text).replace(/[.\s]+$/, '');
+  if (kind === 'sf') return m ? first + '’s strongest area so far is being able to ' + body + '.' : first + '’s strongest area so far: ' + body + '.';
+  if (kind === 'tf') return first + '’s next step is to extend: ' + body + '.';
   if (kind === 's') return m ? first + ' can ' + body + '.' : first + ' met the objective: ' + body + '.';
   return m ? first + '’s next step is to be able to ' + body + '.' : first + '’s next step: ' + body + '.';
 }
 function pickTexts(p, scope){
   var r = strengthsTargets(p, scope);
-  var pick = function(list, kind){ return list.filter(function(x){ return !S.excl[stKey(scope, p, x.f.lo)]; }).map(function(x){ return phrase(kind, p.name, x.f.lo.text); }); };
+  var pick = function(list, kind){ return list.filter(function(x){ return !S.excl[stKey(scope, p, x.f.lo)]; }).map(function(x){ return phrase(x.fb ? kind + 'f' : kind, p.name, x.f.lo.text); }); };
   return {s: pick(r.strengths, 's'), t: pick(r.targets, 't')};
 }
+/* ---------- report overview: a celebratory summary of the highest attainment, about 400 characters ---------- */
+var OVR_TARGET = 420;
+function ovBody(text){
+  var m = String(text).match(/^i can\s+(.*)$/i), b = (m ? m[1] : String(text)).replace(/[.\s]+$/, '');
+  return m ? b : b.charAt(0).toLowerCase() + b.slice(1);
+}
+function ovList(a){ return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+function overviewFor(p, scope){
+  var first = p.name.split(' ')[0], year = yearOfPupil(p.id);
+  var los = scopeLos(scope, year), items = [];
+  los.forEach(function(f, n){ var m = getMark(p.id, f.lo.id); if (m && m.r) items.push({f:f, m:m, r:m.r, d:m.d || '', n:n}); });
+  var good = items.filter(function(x){ return x.r === 'B' || x.r === 'G'; });
+  if (!good.length) return '';
+  var recent = function(a, b){ return (a.d < b.d ? 1 : a.d > b.d ? -1 : 0) || (a.n - b.n); };
+  var ranked = good.slice().sort(function(a, b){ return (LEVEL[b.r] - LEVEL[a.r]) || recent(a, b); });
+  var ids = scopeIds(scope), titles = S.units.filter(function(u){ return ids.indexOf(u.id) >= 0; }).map(function(u){ return u.title; });
+  var lead = scope === 'all' ? 'This year' : titles.length === 1 ? 'In ' + titles[0] : 'Across ' + ovList(titles);
+  var build = function(sel){
+    var up = sel.filter(function(x){ return x.r === 'B'; }).map(function(x){ return ovBody(x.f.lo.text); });
+    var ok = sel.filter(function(x){ return x.r === 'G'; }).map(function(x){ return ovBody(x.f.lo.text); });
+    var t = '';
+    if (up.length) t = lead + ', ' + first + ' has exceeded expectations and is able to ' + ovList(up) + '.';
+    if (ok.length) t += (t ? ' ' + first + ' can also ' : lead + ', ' + first + ' has met expectations and can ') + ovList(ok) + '.';
+    return t;
+  };
+  var sel = [], text = '';
+  for (var i = 0; i < ranked.length && sel.length < S.ui.tOvrN; i++) {
+    var tryText = build(sel.concat([ranked[i]]));
+    if (sel.length && tryText.length > OVR_TARGET) break;
+    sel.push(ranked[i]); text = tryText;
+  }
+  return text;
+}
+function ovrKey(scope, p){ return scope + '|' + p.id; }
+function overviewText(p, scope){ var k = ovrKey(scope, p); return Object.prototype.hasOwnProperty.call(S.ovr, k) ? S.ovr[k] : overviewFor(p, scope); }
 function stRows(c, scope){
   return c.pupils.map(function(p){
     var t = pickTexts(p, scope), o = {};
-    o['Year group'] = c.year; o['Form'] = c.name; o['Pupil'] = p.name; o['Scope'] = scopeLabel(scope);
+    o['Year group'] = c.year; o['Form'] = c.name; o['Pupil'] = p.name; o['Scope'] = scopeLabel(scope); if (S.ui.tShowO) o['Report overview'] = overviewText(p, scope);
     var i;
-    for (i = 0; i < S.ui.tStrN; i++) o['Strength ' + (i + 1)] = t.s[i] || '';
-    for (i = 0; i < S.ui.tTarN; i++) o['Target ' + (i + 1)] = t.t[i] || '';
+    if (S.ui.tShowS) for (i = 0; i < S.ui.tStrN; i++) o['Strength ' + (i + 1)] = t.s[i] || '';
+    if (S.ui.tShowT) for (i = 0; i < S.ui.tTarN; i++) o['Target ' + (i + 1)] = t.t[i] || '';
     return o;
   });
 }
@@ -859,37 +987,45 @@ function stText(c, scope){
   var list = function(a){ return a.length ? a.map(function(x){ return '- ' + x; }).join('\n') : '- None recorded yet'; };
   return c.name + ' | ' + scopeLabel(scope) + '\n\n' + c.pupils.map(function(p){
     var t = pickTexts(p, scope);
-    return p.name + '\nStrengths:\n' + list(t.s) + '\nTargets:\n' + list(t.t);
+    var ov = overviewText(p, scope);
+    return p.name + (S.ui.tShowO && ov ? '\nOverview:\n' + ov : '') + (S.ui.tShowS ? '\nStrengths:\n' + list(t.s) : '') + (S.ui.tShowT ? '\nTargets:\n' + list(t.t) : '');
   }).join('\n\n');
 }
 function viewTargets(){
   var cls = S.classes.filter(function(c){ return c.id === S.ui.tClass; })[0];
   if (!cls || !S.units.length) return banner() + empty('Add a class list and some learning objectives first.', 'Go to Set up and adjust', 'setup');
   var scope = S.ui.tScope;
-  var scopeOpts = '<option value="all"' + (scope === 'all' ? ' selected' : '') + '>All units (end of year)</option>' +
-    selOpts(S.units, scope, function(x){ return x.id; }, function(x){ return x.title; });
+  var chosen = scopeIds(scope);
+  var scopeBoxes = '<label class="titem"><input type="checkbox" class="scopeChk" id="sc-all" data-scope="all"' + (scope === 'all' ? ' checked' : '') + '><span>All units (whole year)</span></label>' +
+    unitsFor(cls.year).map(function(u){ return '<label class="titem"><input type="checkbox" class="scopeChk" id="sc-' + esc(u.id) + '" data-scope="' + esc(u.id) + '"' + (chosen.indexOf(u.id) >= 0 ? ' checked' : '') + '><span>' + esc(u.title) + '</span></label>'; }).join('');
   var col = function(p, list, kind, none){
     if (!list.length) return '<p class="muted">' + none + '</p>';
     return list.map(function(x){
       var k = stKey(scope, p, x.f.lo);
       return '<label class="titem"><input type="checkbox" data-k="' + esc(k) + '"' + (S.excl[k] ? '' : ' checked') + '>' +
-        '<span><span class="tag" data-r="' + x.r + '">' + RLABEL[x.r] + '</span> <span class="ttext">' + esc(phrase(kind, p.name, x.f.lo.text)) + '</span></span></label>';
+        '<span><span class="tag" data-r="' + x.r + '">' + RLABEL[x.r] + '</span> <span class="ttext">' + esc(phrase(x.fb ? kind + 'f' : kind, p.name, x.f.lo.text)) + '</span></span></label>';
     }).join('');
   };
   var cards = cls.pupils.map(function(p){
-    var r = strengthsTargets(p, scope);
+    var r = strengthsTargets(p, scope), ov = overviewText(p, scope);
     return '<li class="tcard"><div class="tname"><span class="pn">' + esc(p.name) + '</span><span class="muted mono" style="font-size:12px">' + r.marked + ' of ' + r.total + ' marked</span></div>' +
-      '<div class="tcols"><div><h3>Strengths</h3>' + col(p, r.strengths, 's', 'Nothing marked Meeting or Above yet.') + '</div>' +
-      '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked Below or Towards yet.') + '</div></div></li>';
+      (S.ui.tShowO ? '<div class="ovr"><h3>Report overview <span class="muted ovr-count" style="font-weight:400;text-transform:none;letter-spacing:0">' + ov.length + ' characters</span></h3>' +
+        '<textarea class="ovr-ta" rows="5" data-p="' + esc(p.id) + '" aria-label="Report overview for ' + esc(p.name) + '" placeholder="Nothing marked Meeting or Above yet.">' + esc(ov) + '</textarea>' +
+        (Object.prototype.hasOwnProperty.call(S.ovr, ovrKey(scope, p)) ? '<button type="button" class="btn ghost small" data-act="ovrReset" data-p="' + esc(p.id) + '">Reset to suggested</button>' : '') + '</div>' : '') +
+      (S.ui.tShowS || S.ui.tShowT ? '<div class="tcols">' + (S.ui.tShowS ? '<div><h3>Strengths</h3>' + col(p, r.strengths, 's', 'Nothing marked Meeting or Above yet.') + '</div>' : '') +
+      (S.ui.tShowT ? '<div><h3>Targets</h3>' + col(p, r.targets, 't', 'Nothing marked Below or Towards yet.') + '</div>' : '') + '</div>' : '') + '</li>';
   }).join('');
   return banner() +
   '<section class="pick">' +
     '<label class="field"><span>Form</span><select id="tClass">' + selOpts(S.classes, S.ui.tClass, function(x){ return x.id; }, function(x){ return x.name; }) + '</select></label>' +
-    '<label class="field"><span>Unit or whole year</span><select id="tScope">' + scopeOpts + '</select></label>' +
-    '<label class="field"><span>Strengths per pupil</span><select id="tStrN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tStrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
-    '<label class="field"><span>Targets per pupil</span><select id="tTarN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tTarN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+    '<div class="field wide" role="group" aria-label="Units to include"><span>Units to include</span><div class="scopelist">' + scopeBoxes + '</div></div>' +
+    '<div class="field wide" role="group" aria-label="Sections to include"><span>Sections to include</span><div class="scopelist">' +
+      [['O', 'Report overview'], ['S', 'Strengths'], ['T', 'Targets']].map(function(x){ return '<label class="titem"><input type="checkbox" data-show="tShow' + x[0] + '"' + (S.ui['tShow' + x[0]] ? ' checked' : '') + '><span>' + x[1] + '</span></label>'; }).join('') + '</div></div>' +
+    (S.ui.tShowO ? '<label class="field"><span>Top attainments in overview</span><select id="tOvrN">' + [2, 3, 4, 5, 6].map(function(n){ return '<option value="' + n + '"' + (S.ui.tOvrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
+    (S.ui.tShowS ? '<label class="field"><span>Strengths per pupil</span><select id="tStrN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tStrN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
+    (S.ui.tShowT ? '<label class="field"><span>Targets per pupil</span><select id="tTarN">' + [1, 2, 3].map(function(n){ return '<option value="' + n + '"' + (S.ui.tTarN === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' : '') +
   '</section>' +
-  '<p class="count" style="margin-top:12px">Strengths come from objectives marked Above or Meeting, and targets from those marked Below or Towards. Choose how many of each you need, most recent first. Untick any you do not want to use.</p>' +
+  '<p class="count" style="margin-top:12px">Tick the sections you want. The report overview celebrates each pupil’s top attainments across the units chosen (Above first, then Meeting), at about 400 characters, and you can edit it. Strengths come from objectives marked Above or Meeting, and targets from those marked Below or Towards. If a pupil has nothing at Meeting or Above, their highest ratings are used as strengths, and if nothing is below Meeting, their lowest are used as targets. Choose how many of each you need, most recent first. Untick any you do not want to use.</p>' +
   '<div class="bulk"><button class="btn" type="button" data-act="tXlsx">Download Excel (.xlsx)</button><button class="btn ghost" type="button" data-act="tCopy">Copy all as text</button><button class="btn ghost" type="button" data-act="tCsv">Download CSV</button></div>' +
   '<textarea id="tFallback" class="ta-mono" rows="10" hidden aria-label="Reporting text to copy" style="margin-top:12px"></textarea>' +
   '<ul class="tlist">' + cards + '</ul>';
@@ -910,6 +1046,7 @@ function viewHome(){
   return '<section class="welcome"><span class="logo big" aria-hidden="true">' + LOGO + '</span>' +
     '<h1>Welcome to Markbook</h1>' +
     '<p class="lede">Quick assessment tool</p>' + stripe +
+    '<p class="muted" style="margin:-4px 0 0;font-size:13px">Created by Andy Calas</p>' +
     '<div class="doors">' +
       door('mark', ICON.mark, 'Mark and Grid', 'Rate each pupil against a learning objective, then see the whole class at a glance.') +
       door('targets', ICON.targets, 'Reporting', 'Strengths and targets for each pupil, by unit or for the whole year.') +
@@ -928,7 +1065,33 @@ function viewMarkGrid(){
     '<button type="button" data-act="sub" data-sub="grid" aria-pressed="' + (sub === 'grid') + '">Grid</button></div>' +
     (sub === 'grid' ? viewGrid() : viewMark());
 }
+var SPEECH = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+var MIC = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+var rec = null, recBtn = null;
+function stopDictation(){ if (rec) { try { rec.onend = null; rec.stop(); } catch (e) {} } if (recBtn) { recBtn.setAttribute('aria-pressed', 'false'); var l = recBtn.querySelector('span'); if (l) l.textContent = 'Dictate'; recBtn.classList.remove('live'); } rec = null; recBtn = null; }
+function dictate(btn){
+  if (rec && recBtn === btn) { stopDictation(); return; }
+  stopDictation();
+  var ta = btn.closest('.note-box').querySelector('textarea'); if (!ta || !SPEECH) return;
+  var base = ta.value, finalText = '';
+  if (base && !/\s$/.test(base)) base += ' ';
+  var r = new SPEECH(); r.lang = 'en-GB'; r.interimResults = true; r.continuous = true;
+  r.onresult = function(e){
+    var interim = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) { var t = e.results[i][0].transcript; if (e.results[i].isFinal) finalText += t.trim() + ' '; else interim += t; }
+    ta.value = (base + finalText + interim).replace(/\s+$/, ''); ta.dispatchEvent(new Event('input', {bubbles:true}));
+  };
+  r.onerror = function(e){
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') say('Microphone access is blocked. Allow it for this site in your browser settings.');
+    else if (e.error !== 'no-speech' && e.error !== 'aborted') say('Dictation stopped (' + e.error + ').');
+    stopDictation();
+  };
+  r.onend = function(){ stopDictation(); };
+  rec = r; recBtn = btn; btn.setAttribute('aria-pressed', 'true'); btn.classList.add('live'); var l = btn.querySelector('span'); if (l) l.textContent = 'Stop';
+  try { r.start(); } catch (e) { stopDictation(); }
+}
 function render(refocusId){
+  stopDictation();
   fixUI(); applyAccent();
   var v = {home:viewHome, mark:viewMarkGrid, targets:viewTargets, setup:viewSetup, 'export':viewExport}[S.ui.tab] || viewHome;
   $('.wrap').setAttribute('data-view', S.ui.tab);
@@ -966,13 +1129,14 @@ function classEditor(c){
 }
 function unitToText(u){
   var out = ['Unit: ' + u.title];
+  if (u.year) out.push('Year: ' + u.year);
   if (u.summary) out.push('Summary: ' + u.summary);
   u.los.forEach(function(lo){ out.push(lo.text); lo.criteria.forEach(function(c){ out.push('- ' + c); }); });
   return out.join('\n');
 }
 function unitEditor(u){
   return '<div class="editor"><label class="field"><span>Unit, notes, objectives and success criteria</span><textarea id="edUnitText" rows="12" class="ta-mono">' + esc(unitToText(u)) + '</textarea></label>' +
-    '<p class="muted" style="font-size:13px">Same format as pasting: Unit, then Summary or Notes, one objective per line, success criteria after a dash. Reworded objectives keep their marks. Deleting an objective deletes its marks.</p>' +
+    '<p class="muted" style="font-size:13px">Same format as pasting: Unit, then Year (optional, write All or leave the line out for every year), then Summary or Notes, one objective per line, success criteria after a dash. Reworded objectives keep their marks. Deleting an objective deletes its marks.</p>' +
     '<div class="row"><button class="btn small" type="button" data-act="saveUnit">Save changes</button><button class="btn ghost small" type="button" data-act="editUnit" data-id="' + esc(u.id) + '">Cancel</button></div></div>';
 }
 function reconcileUnit(old, nu){
@@ -1056,12 +1220,13 @@ async function handleNamesFile(file){
   } catch (e) { say('Could not read that file.'); }
 }
 /* ---------- staff template ---------- */
-var TPL_COLS = ['Unit', 'Unit summary', 'Learning objective', 'Success criteria'];
+var TPL_COLS = ['Year group', 'Unit', 'Unit summary', 'Learning objective', 'Success criteria'];
 var AI_PROMPT = [
   'I will give you a unit plan. Turn it into a table for a school assessment tool.',
-  'Return CSV in a code block with exactly these four columns: Unit, Unit summary, Learning objective, Success criteria.',
+  'Return CSV in a code block with exactly these five columns: Year group, Unit, Unit summary, Learning objective, Success criteria.',
   'Rules:',
   '- One row per learning objective.',
+  '- Year group is the year the unit is taught in, as a number such as 5. Repeat it on every row. Write All if the unit applies to every year.',
   '- Repeat the unit title on every row. Write the unit summary (one or two sentences) on the first row of the unit and leave it blank on the other rows.',
   '- Write each learning objective as a pupil-friendly "I can ..." statement.',
   '- Put the success criteria for an objective in one cell, separated by semicolons. Use three or four short criteria.',
@@ -1081,25 +1246,40 @@ function tableToUnits(rows){
   if (hi < 0) return null;
   var head = clean[hi].map(function(c){ return c.toLowerCase(); });
   var f = function(re){ for (var k = 0; k < head.length; k++) if (re.test(head[k])) return k; return -1; };
-  var iU = f(/^unit( title)?$/), iS = f(/^(unit summary|summary|unit notes|notes?)$/), iL = f(/^(learning objectives?|objectives?|lo)$/), iC = f(/^(success criteria|success criterion|criteria)$/);
-  var units = [], u = null, skipped = 0;
-  var getUnit = function(t){
-    var found = units.filter(function(x){ return x.title === t; })[0];
-    if (!found) { found = {id:'u-' + (slug(t) || hash(t)), title:t, summary:'', los:[]}; units.push(found); }
+  var iY = f(/^(year group|year|yr|year grp)$/), iU = f(/^unit( title)?$/), iS = f(/^(unit summary|summary|unit notes|notes?)$/), iL = f(/^(learning objectives?|objectives?|lo)$/), iC = f(/^(success criteria|success criterion|criteria)$/);
+  var units = [], us = [], years = [''], lastTitle = '', skipped = 0;
+  var getUnit = function(t, y){
+    var found = units.filter(function(x){ return x.title === t && (x.year || '') === y; })[0];
+    if (!found) { found = {id:unitIdFor(t, y), title:t, year:y, summary:'', los:[]}; units.push(found); }
     return found;
   };
   clean.slice(hi + 1).forEach(function(r){
     if (!r.some(Boolean)) return;
+    if (/^e\.g\./i.test(r[0])) return;
+    var yCell = iY >= 0 ? r[iY] : '';
+    if (yCell) years = splitYears(yCell).length ? splitYears(yCell) : [''];
     var t = r[iU] || '', lo = (r[iL] || '').replace(/^(?:lo\s*\d*\s*[:.)-]\s*|\d+\s*[.)]\s+)/i, '').trim();
-    if (t) u = getUnit(t);
-    var s = iS >= 0 ? r[iS] : '';
-    if (!lo) { if (iC >= 0 && r[iC]) skipped++; if (u && s && !u.summary) u.summary = s; return; }
-    if (!u) u = getUnit('Untitled unit');
-    if (s && !u.summary) u.summary = s;
-    var crit = (iC >= 0 ? r[iC] : '').split(/\r?\n|;/).map(function(x){ return x.replace(/^[-•*]\s*/, '').trim(); }).filter(Boolean);
-    var id = 'l-' + hash(u.title + '|' + lo);
-    if (u.los.some(function(l){ return l.id === id; })) return;
-    u.los.push({id:id, text:lo, criteria:crit});
+    if (t) { lastTitle = t; us = years.map(function(y){ return getUnit(t, y); }); }
+    else if (yCell && lastTitle) us = years.map(function(y){ return getUnit(lastTitle, y); });
+    var s0 = iS >= 0 ? r[iS] : '';
+    if (!lo) {
+      /* A row with success criteria but no objective adds its criteria to the objective above */
+      if (iC >= 0 && r[iC]) {
+        var extra = splitCriteria(r[iC]), attached = false;
+        us.forEach(function(u){ var last = u.los[u.los.length - 1]; if (last) { extra.forEach(function(x){ if (last.criteria.indexOf(x) < 0) last.criteria.push(x); }); attached = true; } });
+        if (!attached) skipped++;
+      }
+      us.forEach(function(u){ if (s0 && !u.summary) u.summary = s0; });
+      return;
+    }
+    if (!us.length) { lastTitle = 'Untitled unit'; us = years.map(function(y){ return getUnit(lastTitle, y); }); }
+    var crit = splitCriteria(iC >= 0 ? r[iC] : '');
+    us.forEach(function(u){
+      if (s0 && !u.summary) u.summary = s0;
+      var id = loIdFor(u.title, lo, u.year);
+      if (u.los.some(function(l){ return l.id === id; })) return;
+      u.los.push({id:id, text:lo, criteria:crit.slice()});
+    });
   });
   return {units:units.filter(function(x){ return x.los.length; }), skipped:skipped};
 }
@@ -1125,28 +1305,101 @@ async function handleTemplateFile(file){
     commitUnits(r.units, r.skipped);
   } catch (e) { say('Could not read that file.'); }
 }
-async function downloadTemplate(){
+async function downloadTemplateLegacy(){
   if (typeof XLSX === 'undefined') { say('The Excel library did not load. Use Copy AI prompt and paste the table instead.'); return; }
-  var wb = XLSX.utils.book_new();
-  var cur = XLSX.utils.aoa_to_sheet([TPL_COLS]); cur['!cols'] = [{wch:28},{wch:44},{wch:50},{wch:60}];
+  var wb = stamp(XLSX.utils.book_new());
+  var cur = XLSX.utils.aoa_to_sheet([TPL_COLS]); cur['!cols'] = [{wch:11},{wch:28},{wch:44},{wch:50},{wch:60}];
   XLSX.utils.book_append_sheet(wb, cur, 'Curriculum');
   var ins = XLSX.utils.aoa_to_sheet([
     ['How to fill in the Curriculum sheet'],
     ['1. One row per learning objective.'],
-    ['2. Unit: the unit title. Repeat it on every row of the unit, or leave it blank to continue the unit above.'],
-    ['3. Unit summary: a short note about the unit. Write it once, on the first row of the unit.'],
-    ['4. Learning objective: start with "I can".'],
-    ['5. Success criteria: separate them with a semicolon, or put each on a new line in the cell.'],
-    ['6. Do not include pupil names or any personal data.'],
-    ['7. In Markbook, open Set up and adjust, then Upload filled template.']
+    ['2. Year group: the year the unit is taught in, for example 5. Different year groups can have different units. Write All for a unit that applies to every year. For a unit shared by two years, write both, for example 5, 6. Repeat it on every row, or leave it blank to continue from the row above. A blank cell always continues the year above, so write All (not blank) to switch back to every year.'],
+    ['3. Unit: the unit title. Repeat it on every row of the unit, or leave it blank to continue the unit above. Start the next unit on the row below the last objective of the previous one.'],
+    ['4. Unit summary: a short note about the unit. Write it once, on the first row of the unit.'],
+    ['5. Learning objective: start with "I can".'],
+    ['6. Success criteria: put them all in the same cell as the objective, separated by a semicolon, a new line, or a comma followed by a capital letter (a comma before a lower-case word stays inside the criterion). You can also put one criterion per row directly under its objective, leaving the other cells blank.'],
+    ['7. Do not include pupil names or any personal data.'],
+    ['8. In Markbook, open Set up and adjust, then Upload filled template.']
   ]); ins['!cols'] = [{wch:100}];
   XLSX.utils.book_append_sheet(wb, ins, 'Instructions');
   var ex = XLSX.utils.aoa_to_sheet([TPL_COLS,
-    ['Selection in physical computing', 'Pupils program a device to respond to inputs using if and else.', 'I can control an output on a physical device with a program', 'Build a sequence of blocks that switches an output on and off; Download and test the program on the device'],
-    ['Selection in physical computing', '', 'I can use selection to make a program respond to an input', 'Explain what a condition is; Use an if/else block with a sensor reading']
-  ]); ex['!cols'] = [{wch:28},{wch:44},{wch:50},{wch:60}];
+    ['5', 'Selection in physical computing', 'Pupils program a device to respond to inputs using if and else.', 'I can control an output on a physical device with a program', 'Build a sequence of blocks that switches an output on and off; Download and test the program on the device'],
+    ['', '', '', 'I can use selection to make a program respond to an input', 'Explain what a condition is; Use an if/else block with a sensor reading'],
+    ['', '', '', 'I can design a program for a real purpose', 'Plan the inputs, outputs and conditions needed; Test, debug and improve the program'],
+    ['5', 'Vector drawing', 'Pupils create and edit shapes in a vector graphics tool.', 'I can create and edit vector shapes', 'Draw and resize shapes using handles; Change fill and outline'],
+    ['6', 'Variables in games', 'Pupils use variables to keep score and track lives in a simple game.', 'I can explain what a variable is', 'Name a variable and give an example of its value; Show how a variable changes during a program'],
+    ['', '', '', 'I can use a variable to keep a score', 'Create a score variable; Increase the score when the player succeeds']
+  ]); ex['!cols'] = [{wch:11},{wch:28},{wch:44},{wch:50},{wch:60}];
   XLSX.utils.book_append_sheet(wb, ex, 'Example');
   await saveFile('markbook-unit-template.xlsx', XLSX.write(wb, {bookType:'xlsx', type:'array'}));
+}
+function loadScript(src){ return new Promise(function(res, rej){ var sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+async function getExcelJS(){
+  if (window.ExcelJS) return window.ExcelJS;
+  try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'); } catch (e) { return null; }
+  return window.ExcelJS || null;
+}
+/* Builds a workbook whose first sheet has a header, faint grey example rows (marked e.g. so they are skipped on upload), and an Instructions sheet */
+async function buildStyledTemplate(sheetName, headers, widths, examples, instructions){
+  var EJ = await getExcelJS(); if (!EJ) return null;
+  var wb = new EJ.Workbook(); wb.creator = 'Andy Calas'; wb.company = 'Markbook by Andy Calas'; var ws = wb.addWorksheet(sheetName, {views:[{state:'frozen', ySplit:1}]});
+  ws.columns = headers.map(function(h, i){ return {width:widths[i]}; });
+  var hr = ws.addRow(headers); hr.height = 22;
+  hr.eachCell(function(c){ c.font = {bold:true, color:{argb:'FF16211F'}}; c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFE6EAE8'}}; c.border = {bottom:{style:'thin', color:{argb:'FF9AA7A4'}}}; c.alignment = {vertical:'middle'}; });
+  examples.forEach(function(row){
+    var r = ws.addRow(row);
+    r.eachCell({includeEmpty:true}, function(c){ c.font = {italic:true, color:{argb:'FFA3AAAD'}}; c.alignment = {vertical:'top', wrapText:true}; });
+  });
+  for (var k = 0; k < 40; k++) { var blank = ws.addRow(headers.map(function(){ return ''; })); blank.eachCell({includeEmpty:true}, function(c){ c.alignment = {vertical:'top', wrapText:true}; }); }
+  var wi = wb.addWorksheet('Instructions');
+  wi.columns = [{width:110}];
+  instructions.forEach(function(t, i){ var r = wi.addRow([t]); r.getCell(1).alignment = {wrapText:true, vertical:'top'}; if (i === 0) r.getCell(1).font = {bold:true, size:13}; });
+  return wb.xlsx.writeBuffer();
+}
+async function downloadTemplate(){
+  var buf = null;
+  try {
+    buf = await buildStyledTemplate('Curriculum', TPL_COLS, [11, 28, 44, 50, 60], [
+      ['e.g. 5', 'Selection in physical computing', 'Pupils program a device to respond to inputs using if and else.', 'I can control an output on a physical device with a program', 'Build a sequence of blocks that switches an output on and off; Download and test the program on the device'],
+      ['e.g. 5', 'Selection in physical computing', '', 'I can use selection to make a program respond to an input', 'Explain what a condition is, Use an if/else block with a sensor reading'],
+      ['e.g. 3, 4', 'Online safety', 'A unit shared by two year groups.', 'I can explain how to keep personal information private', 'Say what counts as personal information; Describe who to tell if unsure'],
+      ['e.g. All', 'Keyboard skills', 'Applies to every year group.', 'I can type accurately using the home row', 'Place fingers on the home row; Type a sentence without looking']
+    ], [
+      'How to fill in the Curriculum sheet',
+      'The pale grey italic rows that start with "e.g." are examples. Delete them or leave them: Markbook ignores any row whose first cell starts with "e.g.". Type your own units below them.',
+      '1. One row per learning objective.',
+      '2. Year group: the year the unit is taught in, for example 5. Different year groups can have different units. Write All for a unit that applies to every year. For a unit shared by two years, write both, for example 5, 6. Repeat it on every row, or leave it blank to continue from the row above. A blank cell always continues the year above, so write All (not blank) to switch back to every year.',
+      '3. Unit: the unit title. Repeat it on every row of the unit, or leave it blank to continue the unit above. Start the next unit on the row below the last objective of the previous one.',
+      '4. Unit summary: a short note about the unit. Write it once, on the first row of the unit.',
+      '5. Learning objective: start with "I can".',
+      '6. Success criteria: put them in the same cell as the objective, separated by a semicolon, a new line, or a comma followed by a capital letter (a comma before a lower-case word stays inside the criterion). You can also put one criterion per row directly under its objective, leaving the other cells blank.',
+      '7. Do not include pupil names or any personal data.',
+      '8. In Markbook, open Set up and adjust, then Upload filled template.'
+    ]);
+  } catch (e) { buf = null; }
+  if (!buf) { await downloadTemplateLegacy(); return; }
+  await saveFile('markbook-unit-template.xlsx', buf);
+}
+async function downloadClassTemplate(){
+  var buf = null;
+  try {
+    buf = await buildStyledTemplate('Class list', ['Pupil name', 'Form', 'Year group'], [30, 12, 12], [
+      ['e.g. Amelia Hart', '5A', '5'],
+      ['e.g. Arjun Patel', '5A', '5'],
+      ['e.g. Beatriz Santos', '5B', '5']
+    ], [
+      'How to fill in the Class list sheet',
+      'The pale grey italic rows that start with "e.g." are examples. Delete them or leave them: Markbook ignores any row whose first cell starts with "e.g.".',
+      '1. One row per pupil.',
+      '2. Pupil name: first name and surname in one cell.',
+      '3. Form: the form or class, for example 5A. Pupils with the same form are grouped together.',
+      '4. Year group: a number such as 5. If you leave it blank, Markbook reads it from the form name.',
+      '5. In Markbook, open Set up and adjust, then Choose CSV or Excel file.',
+      '6. Only add pupils your school allows you to hold in this tool. Check with your data protection lead first.'
+    ]);
+  } catch (e) { buf = null; }
+  if (!buf) { say('Could not build the class list template. Use the paste box with one name per line instead.'); return; }
+  await saveFile('markbook-class-list-template.xlsx', buf);
 }
 async function copyPrompt(){
   try { await navigator.clipboard.writeText(AI_PROMPT); say('AI prompt copied. Paste it into your AI tool, then add your unit plan.'); }
@@ -1202,7 +1455,8 @@ async function exportXlsx(){
   if (await saveFile('markbook-' + today() + '.xlsx', buildXlsx())) markExported();
 }
 async function exportCsv(){ if (await saveFile('markbook-' + today() + '.csv', toCSV(longRows()))) markExported(); }
-async function exportJson(){ if (await saveFile('markbook-backup-' + today() + '.json', JSON.stringify(S, null, 1))) markExported(); }
+function stamp(wb){ wb.Props = {Title:'Markbook', Author:'Andy Calas', Company:'Markbook by Andy Calas', Comments:'Created with Markbook by Andy Calas. Copyright 2026 Andy Calas.'}; return wb; }
+async function exportJson(){ if (await saveFile('markbook-backup-' + today() + '.json', JSON.stringify(Object.assign({madeBy:'Markbook by Andy Calas, copyright 2026'}, S), null, 1))) markExported(); }
 async function copyCsv(){
   var text = toCSV(longRows()).replace('﻿', '');
   try { await navigator.clipboard.writeText(text); say('CSV copied.'); markExported(); }
@@ -1212,7 +1466,7 @@ async function restoreFile(file){
   try {
     var o = JSON.parse(await file.text());
     if (!validState(o)) { say('That file is not a Markbook backup.'); return; }
-    S = o; S.ui = Object.assign({}, DEF_UI, S.ui || {}); S.ui.tab = 'export'; if (!S.excl) S.excl = {}; if (typeof S.dirty !== 'number') S.dirty = 0;
+    S = o; S.ui = Object.assign({}, DEF_UI, S.ui || {}); S.ui.tab = 'export'; if (!S.excl) S.excl = {}; if (!S.ovr) S.ovr = {}; if (typeof S.dirty !== 'number') S.dirty = 0;
     flush(); render(); say('Backup restored.');
   } catch (e) { say('Could not read that backup file.'); }
 }
@@ -1244,12 +1498,17 @@ var actions = {
   rmClass: function(t){ arm(t, function(){ removeClass(t.dataset.id); save(); render(); say('Class removed.'); }, 'Tap again to remove'); },
   rmUnit: function(t){ arm(t, function(){ removeUnit(t.dataset.id); save(); render(); say('Unit removed.'); }, 'Tap again to remove'); },
   loadSample: function(t){ arm(t, function(){ var ui = S.ui; S = seed(); S.ui = Object.assign({}, DEF_UI, {tab:ui.tab}); flush(); render(); say('Sample data loaded.'); }, 'Tap again to replace all data'); },
+  dictate: function(t){ dictate(t); },
   clearAll: function(t){ arm(t, function(){ var ui = S.ui; S = blank(); S.ui = Object.assign({}, DEF_UI, {tab:ui.tab}); flush(); render(); say('All data removed.'); }, 'Tap again to remove everything'); },
   importNames: function(){
     var ta = $('#pasteNames'), d = readDefaults();
     commitPupils(parsePupils(parseDelimited(ta ? ta.value : ''), d.form, d.year));
   },
   addCurric: addCurriculum,
+  ovrReset: function(t){
+    var pp = null; S.classes.forEach(function(c){ c.pupils.forEach(function(x){ if (x.id === t.dataset.p) pp = x; }); });
+    if (pp) { delete S.ovr[ovrKey(S.ui.tScope, pp)]; S.dirty++; save(); render(); }
+  },
   tCopy: async function(){
     var cls = S.classes.filter(function(c){ return c.id === S.ui.tClass; })[0]; if (!cls) return;
     var text = stText(cls, S.ui.tScope);
@@ -1265,12 +1524,13 @@ var actions = {
     if (typeof XLSX === 'undefined') { say('The Excel library did not load. Use Download CSV instead.'); return; }
     var cols = stCols(), rows = stRows(cls, S.ui.tScope);
     var ws = XLSX.utils.aoa_to_sheet([cols].concat(rows.map(function(r){ return cols.map(function(k){ return r[k]; }); })));
-    ws['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(cols.slice(4).map(function(){ return {wch:48}; }));
-    var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Reporting');
+    ws['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(cols.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : 48}; }));
+    var wb = stamp(XLSX.utils.book_new()); XLSX.utils.book_append_sheet(wb, ws, 'Reporting');
     await saveFile('markbook-reporting-' + (slug(cls.name) || 'form') + '-' + today() + '.xlsx', XLSX.write(wb, {bookType:'xlsx', type:'array'}));
   },
   driveSoon: function(){ say('Saving straight to Drive is not built yet. For now, download the Excel file, then upload it to your school Drive.'); },
   tplDownload: downloadTemplate,
+  classTemplate: downloadClassTemplate,
   tplPrompt: copyPrompt,
   editClass: function(t){ S.ui.editClass = (S.ui.editClass === t.dataset.id) ? '' : t.dataset.id; save(); render(); },
   editUnit: function(t){ S.ui.editUnit = (S.ui.editUnit === t.dataset.id) ? '' : t.dataset.id; save(); render(); },
@@ -1295,7 +1555,7 @@ var actions = {
   xlsx: exportXlsx, csv: exportCsv, copyCsv: copyCsv, json: exportJson
 };
 function step(dir){
-  var f = flat(), id = S.ui.loId, i = -1;
+  var f = flat(yearOfClass(S.ui.classId)), id = S.ui.loId, i = -1;
   f.forEach(function(x, k){ if (x.lo.id === id) i = k; });
   var t = f[i + dir]; if (!t) return;
   S.ui.unitId = t.u.id; S.ui.loId = t.lo.id; save(); render();
@@ -1311,6 +1571,16 @@ app.addEventListener('click', function(e){
 });
 app.addEventListener('input', function(e){
   var ta = e.target;
+  if (ta.tagName === 'TEXTAREA' && ta.classList.contains('ovr-ta')) {
+    var pp = null; S.classes.forEach(function(c){ c.pupils.forEach(function(x){ if (x.id === ta.dataset.p) pp = x; }); });
+    if (pp) {
+      var k = ovrKey(S.ui.tScope, pp);
+      if (ta.value === overviewFor(pp, S.ui.tScope)) delete S.ovr[k]; else S.ovr[k] = ta.value;
+      S.dirty++; save(); paintChip();
+      var cnt = ta.closest('.ovr').querySelector('.ovr-count'); if (cnt) cnt.textContent = ta.value.length + ' characters';
+    }
+    return;
+  }
   if (ta.tagName === 'TEXTAREA' && ta.closest('.pupil')) {
     var li = ta.closest('.pupil'), c = cur(); setNote(li.dataset.p, c.lo.id, ta.value);
     var tg = li.querySelector('.note-toggle'); if (tg) tg.classList.toggle('has', !!ta.value);
@@ -1319,6 +1589,16 @@ app.addEventListener('input', function(e){
 app.addEventListener('change', function(e){
   var el = e.target, id = el.id;
   if (el.tagName === 'TEXTAREA' && el.closest('.pupil')) { S.dirty++; save(); paintChip(); return; }
+  if (el.classList && el.classList.contains('scopeChk')) {
+    var ns = 'all';
+    if (el.dataset.scope !== 'all') {
+      var picked = Array.prototype.map.call(app.querySelectorAll('.scopeChk:checked'), function(x){ return x.dataset.scope; }).filter(function(x){ return x !== 'all'; });
+      var ordered = S.units.map(function(x){ return x.id; }).filter(function(x){ return picked.indexOf(x) >= 0; });
+      if (ordered.length) ns = ordered.join('+');
+    }
+    S.ui.tScope = ns; save(); render(el.dataset.scope === 'all' || ns === 'all' ? 'sc-all' : el.id); return;
+  }
+  if (el.type === 'checkbox' && el.dataset.show) { S.ui[el.dataset.show] = el.checked; save(); render(); return; }
   if (el.type === 'checkbox' && el.dataset.k) {
     if (el.checked) delete S.excl[el.dataset.k]; else S.excl[el.dataset.k] = 1;
     S.dirty++; save(); paintChip(); return;
@@ -1342,8 +1622,8 @@ app.addEventListener('change', function(e){
   else if (id === 'gClass') { S.ui.gridClass = el.value; save(); render(id); }
   else if (id === 'gUnit') { S.ui.gridUnit = el.value; save(); render(id); }
   else if (id === 'tClass') { S.ui.tClass = el.value; save(); render(id); }
-  else if (id === 'tScope') { S.ui.tScope = el.value; save(); render(id); }
   else if (id === 'tStrN') { S.ui.tStrN = Number(el.value); save(); render(id); }
+  else if (id === 'tOvrN') { S.ui.tOvrN = Number(el.value); save(); render(id); }
   else if (id === 'tTarN') { S.ui.tTarN = Number(el.value); save(); render(id); }
   else if (id === 'fileInput' && el.files[0]) { handleNamesFile(el.files[0]); }
   else if (id === 'restoreInput' && el.files[0]) { restoreFile(el.files[0]); }
