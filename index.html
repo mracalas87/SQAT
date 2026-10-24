@@ -82,10 +82,13 @@ p{margin:0}
 
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
-.bar-row{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar-row{flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.bar-row .brand{justify-self:start}
+.bar-row .hdr-credit{justify-self:end}
+.homebtn{min-height:44px;min-width:56px;padding:0 14px;display:inline-grid;place-items:center}
 .brand{display:flex;align-items:center;gap:10px}
-.hdr-credit{margin-left:auto;margin-right:10px;font:500 12px/1 var(--font-body);color:var(--muted);white-space:nowrap}
-@media (max-width:340px){.hdr-credit{display:none}}
+.hdr-credit{font:500 12px/1 var(--font-body);color:var(--muted);white-space:nowrap}
+@media (max-width:420px){.hdr-credit{font-size:11px;white-space:nowrap}.bar-row{gap:6px}}
 .wordmark{font:700 19px/1 var(--font-display);letter-spacing:-.01em}
 .logo{display:inline-block;width:28px;height:28px;flex:none}
 .logo svg{width:100%;height:100%;display:block}
@@ -180,7 +183,7 @@ textarea{resize:vertical;line-height:1.45}
 .lo-nav{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 
 .progress{margin-top:18px}
-.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line-soft)}
+.pbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line-soft)}
 .seg.R{background:var(--r)} .seg.Y{background:var(--y)} .seg.G{background:var(--g)} .seg.B{background:var(--b)}
 .count{margin-top:6px;font-size:13px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:14px;font-size:13px;color:var(--muted)}
@@ -259,7 +262,7 @@ tfoot td,tfoot th{font:500 12px var(--font-mono);color:var(--muted);border-botto
   <header class="bar">
     <div class="bar-row">
       <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect width="24" height="24" rx="6" style="fill:var(--accent)"/><path d="M6.5 12.5l3.6 3.6 7.4-8" style="fill:none;stroke:var(--on-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"/></svg></span><span class="wordmark">Markbook</span></div>
-      <span class="hdr-credit">&copy; 2026 Andy Calas.</span><button id="homeBtn" class="btn ghost small" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button>
+      <button id="homeBtn" class="btn ghost homebtn" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"/></svg></button><span class="hdr-credit">&copy; 2026 Andy Calas.</span>
     </div>
   </header>
   <div class="page-head"><h1 class="page-title" id="pageTitle"></h1><button id="chip" class="chip" type="button"></button></div>
@@ -281,7 +284,7 @@ var RATE = [
   {k:'B', label:'Above',   meaning:'Above expected'}
 ];
 var MEAN = {}; RATE.forEach(function(r){ MEAN[r.k] = r.meaning; });
-var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, tOvrN:4, tShowO:true, tShowS:true, tShowT:true, accent:'ink'};
+var DEF_UI = {tab:'home', sub:'mark', classId:'', unitId:'', loId:'', gridUnit:'all', gridClass:'', editClass:'', editUnit:'', tClass:'', tScope:'all', tStrN:3, tTarN:3, exScope:'all', tOvrN:4, tShowO:true, tShowS:true, tShowT:true, accent:'ink'};
 
 var $ = function(s, r){ return (r || document).querySelector(s); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
@@ -629,7 +632,7 @@ function progressHTML(){
   c.cls.pupils.forEach(function(p){ var m = getMark(p.id, c.lo.id); if (m && m.r) { counts[m.r]++; marked++; } });
   var n = c.cls.pupils.length;
   var detail = RATE.filter(function(r){ return counts[r.k]; }).map(function(r){ return counts[r.k] + ' ' + r.label; }).join(' · ');
-  return '<div class="bar" role="img" aria-label="' + marked + ' of ' + n + ' marked">' +
+  return '<div class="pbar" role="img" aria-label="' + marked + ' of ' + n + ' marked">' +
     RATE.map(function(r){ return '<span class="seg ' + r.k + '" style="flex:' + counts[r.k] + '"></span>'; }).join('') +
     '</div><p class="count">' + marked + ' of ' + n + ' marked' + (detail ? ': ' + esc(detail) : '') + '</p>';
 }
@@ -753,10 +756,67 @@ function viewSetup(){
   '</section>';
 }
 
+
+/* ---------- export scope: whole school, a year group, or one form ---------- */
+function exScopeObj(){
+  var v = String(S.ui.exScope || 'all'), cl = S.classes, label = 'Whole school', file = 'whole-school';
+  if (v.indexOf('y:') === 0) {
+    var y = v.slice(2), m = S.classes.filter(function(c){ return normYear(c.year) === y; });
+    if (m.length) { cl = m; label = 'Year ' + y; file = 'year-' + (slug(y) || y); }
+  } else if (v.indexOf('c:') === 0) {
+    var m2 = S.classes.filter(function(c){ return c.id === v.slice(2); });
+    if (m2.length) { cl = m2; label = m2[0].name; file = 'form-' + (slug(m2[0].name) || 'form'); }
+  }
+  return {classes:cl, label:label, file:file, whole:cl === S.classes};
+}
+function exYears(){
+  var seen = {}, out = [];
+  S.classes.forEach(function(c){ var y = normYear(c.year); if (y && !seen[y]) { seen[y] = 1; out.push(y); } });
+  return out.sort(function(a, b){ return (parseFloat(a) || 0) - (parseFloat(b) || 0) || (a < b ? -1 : 1); });
+}
+/* ---------- summaries: how each form or year group did on every objective and unit ---------- */
+var SUM_COLS = ['Level','Year group','Form','Unit','LO ref','Learning objective','Ratings counted','Below','Towards','Meeting','Above','% Meeting or above','Typical grade'];
+function tally(pupils, loIds){
+  var t = {n:0, R:0, Y:0, G:0, B:0, lv:[]};
+  pupils.forEach(function(p){ loIds.forEach(function(id){ var m = S.marks[mk(p.id, id)]; if (m && m.r) { t.n++; t[m.r]++; t.lv.push(LEVEL[m.r]); } }); });
+  return t;
+}
+function sumRow(level, yr, form, unit, ref, text, t){
+  var typical = '';
+  if (t.n) { t.lv.sort(function(a, b){ return a - b; }); var k = ['', 'R', 'Y', 'G', 'B'][t.lv[Math.floor((t.n - 1) / 2)]]; typical = RLABEL[k]; }
+  return [level, yr, form, unit, ref, text, t.n || '', t.n ? t.R : '', t.n ? t.Y : '', t.n ? t.G : '', t.n ? t.B : '', t.n ? Math.round((t.G + t.B) / t.n * 100) + '%' : '', typical];
+}
+function summaryRows(groups, schoolRow){
+  /* groups: [{year, form, pupils}] */
+  var rows = [SUM_COLS], school = {n:0, R:0, Y:0, G:0, B:0, lv:[]};
+  groups.forEach(function(g){
+    var all = [];
+    unitsFor(g.year).forEach(function(u){
+      if (!u.los.length) return;
+      var ids = u.los.map(function(l){ return l.id; });
+      u.los.forEach(function(lo, i){ rows.push(sumRow('Objective', g.year, g.form, u.title, code(u, i), lo.text, tally(g.pupils, [lo.id]))); });
+      rows.push(sumRow('Unit total', g.year, g.form, u.title, '', 'All objectives in this unit', tally(g.pupils, ids)));
+      all = all.concat(ids);
+    });
+    var tt = tally(g.pupils, all);
+    rows.push(sumRow(g.form === 'All forms' ? 'Year total' : 'Form total', g.year, g.form, 'All units', '', 'Every objective rated', tt));
+    rows.push([]);
+    ['n', 'R', 'Y', 'G', 'B'].forEach(function(k){ school[k] += tt[k]; }); school.lv = school.lv.concat(tt.lv);
+  });
+  if (schoolRow && groups.length > 1) rows.push(sumRow('School total', 'All', 'All forms', 'All units', '', 'Every objective rated, whole school', school));
+  return rows;
+}
+function summaryGroups(CL){
+  var forms = CL.map(function(c){ return {year:c.year, form:c.name, pupils:c.pupils}; });
+  var by = {}, years = [];
+  CL.forEach(function(c){ var y = normYear(c.year); if (!by[y]) { by[y] = {year:c.year, form:'All forms', pupils:[]}; years.push(y); } by[y].pupils = by[y].pupils.concat(c.pupils); });
+  return {forms:forms, years:years.map(function(y){ return by[y]; })};
+}
+
 var COLS = ['Year group','Form','Pupil','Unit','LO ref','Learning objective','Rating','Rating meaning','Note','Date observed','First rating','First date','Progress','Times marked'];
-function longRows(){
+function longRows(classes){
   var out = [];
-  S.classes.forEach(function(c){ c.pupils.forEach(function(p){ unitsFor(c.year).forEach(function(u){ u.los.forEach(function(lo, i){
+  (classes || S.classes).forEach(function(c){ c.pupils.forEach(function(p){ unitsFor(c.year).forEach(function(u){ u.los.forEach(function(lo, i){
     var m = S.marks[mk(p.id, lo.id)]; if (!m || (!m.r && !m.n)) return;
     var o = {}; o[COLS[0]] = c.year; o[COLS[1]] = c.name; o[COLS[2]] = p.name; o[COLS[3]] = u.title; o[COLS[4]] = code(u, i);
     o[COLS[5]] = lo.text; o[COLS[6]] = m.r || ''; o[COLS[7]] = MEAN[m.r] || ''; o[COLS[8]] = m.n || ''; o[COLS[9]] = m.d || '';
@@ -775,15 +835,15 @@ function toCSV(rows, cols){
   return '﻿' + [cols.map(q).join(',')].concat(rows.map(function(r){ return cols.map(function(c){ return q(r[c]); }).join(','); })).join('\r\n');
 }
 function buildXlsx(){
-  var rows = longRows(), wb = stamp(XLSX.utils.book_new());
+  var scx = exScopeObj(), CL = scx.classes, rows = longRows(CL), wb = stamp(XLSX.utils.book_new());
   var obs = XLSX.utils.aoa_to_sheet([COLS].concat(rows.map(function(r){ return COLS.map(function(c){ return r[c]; }); })));
   obs['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:28},{wch:8},{wch:50},{wch:7},{wch:24},{wch:36},{wch:13},{wch:11},{wch:12},{wch:14},{wch:12}];
   var losFor = function(year){ var out = []; unitsFor(year).forEach(function(u){ u.los.forEach(function(lo, i){ out.push({u:u, lo:lo, c:code(u, i)}); }); }); return out; };
   var usedNames = {};
   var wrapLn = function(t, w){ var out = [], line = ''; String(t).split(/\s+/).forEach(function(wd){ if (line && (line + ' ' + wd).length > w) { out.push(line); line = wd; } else line = line ? line + ' ' + wd : wd; }); if (line) out.push(line); return out; };
-  S.classes.forEach(function(c){
+  CL.forEach(function(c){
     var nm = String(c.name).replace(/[\\\/?*\[\]:]/g, '-').slice(0, 28) || 'Form', k = 2, base = nm;
-    while (usedNames[nm.toLowerCase()] || /^(data|history|curriculum|reporting|key)$/i.test(nm)) nm = base + ' ' + (k++);
+    while (usedNames[nm.toLowerCase()] || /^(data|history|curriculum|reporting|key|form summary|year summary)$/i.test(nm)) nm = base + ' ' + (k++);
     usedNames[nm.toLowerCase()] = 1;
     var los = losFor(c.year);
     /* Each objective gets two columns: Rating and Notes. Unit and objective headings merge across them. */
@@ -820,18 +880,27 @@ function buildXlsx(){
     fsh['!cols'] = cw;
     XLSX.utils.book_append_sheet(wb, fsh, nm);
   });
+  var grp = summaryGroups(CL), fsum = XLSX.utils.aoa_to_sheet(summaryRows(grp.forms));
+  fsum['!cols'] = [{wch:11},{wch:11},{wch:10},{wch:28},{wch:8},{wch:50},{wch:9},{wch:8},{wch:9},{wch:9},{wch:8},{wch:12},{wch:13}];
+  XLSX.utils.book_append_sheet(wb, fsum, 'Form summary');
+  if (CL.length > 1 || grp.years.length) {
+    var ysum = XLSX.utils.aoa_to_sheet(summaryRows(grp.years, true));
+    ysum['!cols'] = fsum['!cols'];
+    if (CL.length > 1) XLSX.utils.book_append_sheet(wb, ysum, 'Year summary');
+  }
   var hrows = [['Year group','Form','Pupil','Unit','LO ref','Learning objective','Rating','Rating meaning','Date','Current']];
-  S.classes.forEach(function(c){ var cl = losFor(c.year); c.pupils.forEach(function(p){ cl.forEach(function(x){
+  CL.forEach(function(c){ var cl = losFor(c.year); c.pupils.forEach(function(p){ cl.forEach(function(x){
     var m = S.marks[mk(p.id, x.lo.id)]; if (!changed(m)) return;
     history(m).forEach(function(e, k, arr){ hrows.push([c.year, c.name, p.name, x.u.title, x.c, x.lo.text, e.r, MEAN[e.r] || '', e.d, k === arr.length - 1 ? 'Yes' : 'No']); });
   }); }); });
   var hs = XLSX.utils.aoa_to_sheet(hrows); hs['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:28},{wch:8},{wch:50},{wch:7},{wch:24},{wch:12},{wch:9}];
   XLSX.utils.book_append_sheet(wb, hs, 'History');
   var cur2 = [['Year group','Unit','Unit summary','Learning objective','Success criteria','LO ref']];
-  S.units.forEach(function(u){ u.los.forEach(function(lo, i){ cur2.push([u.year || 'All', u.title, u.summary || '', lo.text, lo.criteria.join('; '), code(u, i)]); }); });
+  var cYears = CL.map(function(c){ return c.year; }), inScope = function(u){ return !u.year || cYears.some(function(y){ return normYear(y) === normYear(u.year); }); };
+  S.units.filter(inScope).forEach(function(u){ u.los.forEach(function(lo, i){ cur2.push([u.year || 'All', u.title, u.summary || '', lo.text, lo.criteria.join('; '), code(u, i)]); }); });
   var cs = XLSX.utils.aoa_to_sheet(cur2); cs['!cols'] = [{wch:11},{wch:28},{wch:44},{wch:50},{wch:60},{wch:8}];
   XLSX.utils.book_append_sheet(wb, cs, 'Curriculum');
-  var stAll = []; S.classes.forEach(function(c){ stAll = stAll.concat(stRows(c, 'all')); });
+  var stAll = []; CL.forEach(function(c){ stAll = stAll.concat(stRows(c, 'all')); });
   var sc = stCols();
   var sts = XLSX.utils.aoa_to_sheet([sc].concat(stAll.map(function(r){ return sc.map(function(k){ return r[k]; }); })));
   sts['!cols'] = [{wch:11},{wch:8},{wch:22},{wch:24}].concat(sc.slice(4).map(function(k){ return {wch:k === 'Report overview' ? 90 : 48}; }));
@@ -844,7 +913,7 @@ function buildXlsx(){
 }
 
 function viewExport(){
-  var rows = longRows(), prev = rows.slice(0, 6);
+  var scx = exScopeObj(), rows = longRows(scx.classes), prev = rows.slice(0, 6);
   var table = prev.length
     ? '<div class="scroll"><table><thead><tr>' + COLS.map(function(c){ return '<th scope="col">' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       prev.map(function(r){ return '<tr>' + COLS.map(function(c){ return '<td style="text-align:left;max-width:240px;overflow:hidden;text-overflow:ellipsis">' + esc(r[c]) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'
@@ -852,6 +921,10 @@ function viewExport(){
   return banner() +
   '<section class="card"><h2>Export your marks</h2>' +
     '<p class="muted">' + rows.length + ' observations ready. Each file holds every pupil, form, unit and objective, so it can be filtered, pivoted or mapped to a reporting import. Each form has its own tab with rating and notes side by side. Ratings that go up are starred, and every change is listed with dates on the History sheet.</p>' +
+    '<label class="field"><span>What to export</span><select id="exScope"><option value="all"' + (S.ui.exScope === 'all' || !S.ui.exScope ? ' selected' : '') + '>Whole school (every form)</option>' +
+      exYears().map(function(y){ return '<option value="y:' + esc(y) + '"' + (S.ui.exScope === 'y:' + y ? ' selected' : '') + '>Year ' + esc(y) + ' (all its forms)</option>'; }).join('') +
+      S.classes.map(function(c){ return '<option value="c:' + esc(c.id) + '"' + (S.ui.exScope === 'c:' + c.id ? ' selected' : '') + '>' + esc(c.name) + ' only</option>'; }).join('') + '</select></label>' +
+    '<p class="muted">Exporting: <b>' + esc(scx.label) + '</b>. Besides the pupil tabs, the Excel file has a Form summary (every objective and unit for each form) and, for more than one form, a Year summary. Both show how many pupils are Below, Towards, Meeting and Above, the percentage Meeting or above, and the typical grade.</p>' +
     '<div class="row">' +
       '<button class="btn" type="button" data-act="xlsx">Excel workbook (.xlsx)</button>' +
       '<button class="btn ghost" type="button" data-act="csv">CSV (.csv)</button>' +
@@ -1452,13 +1525,13 @@ async function saveFile(name, data){
 function markExported(){ S.dirty = 0; S.lastExport = today(); save(); paintChip(); }
 async function exportXlsx(){
   if (typeof XLSX === 'undefined') { say('The Excel library did not load. Use the CSV export instead.'); return; }
-  if (await saveFile('markbook-' + today() + '.xlsx', buildXlsx())) markExported();
+  if (await saveFile('markbook-' + exScopeObj().file + '-' + today() + '.xlsx', buildXlsx())) markExported();
 }
-async function exportCsv(){ if (await saveFile('markbook-' + today() + '.csv', toCSV(longRows()))) markExported(); }
+async function exportCsv(){ if (await saveFile('markbook-' + exScopeObj().file + '-' + today() + '.csv', toCSV(longRows(exScopeObj().classes)))) markExported(); }
 function stamp(wb){ wb.Props = {Title:'Markbook', Author:'Andy Calas', Company:'Markbook by Andy Calas', Comments:'Created with Markbook by Andy Calas. Copyright 2026 Andy Calas.'}; return wb; }
 async function exportJson(){ if (await saveFile('markbook-backup-' + today() + '.json', JSON.stringify(Object.assign({madeBy:'Markbook by Andy Calas, copyright 2026'}, S), null, 1))) markExported(); }
 async function copyCsv(){
-  var text = toCSV(longRows()).replace('﻿', '');
+  var text = toCSV(longRows(exScopeObj().classes)).replace('﻿', '');
   try { await navigator.clipboard.writeText(text); say('CSV copied.'); markExported(); }
   catch (e) { var box = $('#csvFallback'); if (box) { box.hidden = false; box.value = text; box.focus(); box.select(); } say('Select all and copy the text shown.'); }
 }
@@ -1623,6 +1696,7 @@ app.addEventListener('change', function(e){
   else if (id === 'gUnit') { S.ui.gridUnit = el.value; save(); render(id); }
   else if (id === 'tClass') { S.ui.tClass = el.value; save(); render(id); }
   else if (id === 'tStrN') { S.ui.tStrN = Number(el.value); save(); render(id); }
+  else if (id === 'exScope') { S.ui.exScope = el.value; save(); render(id); }
   else if (id === 'tOvrN') { S.ui.tOvrN = Number(el.value); save(); render(id); }
   else if (id === 'tTarN') { S.ui.tTarN = Number(el.value); save(); render(id); }
   else if (id === 'fileInput' && el.files[0]) { handleNamesFile(el.files[0]); }
